@@ -1,0 +1,12 @@
+FROM alpine:3.21
+
+ARG TARGETPLATFORM
+
+RUN apk add --no-cache ca-certificates tzdata
+
+COPY $TARGETPLATFORM/moonhub /usr/local/bin/moonhub
+COPY $TARGETPLATFORM/moonhub-launcher /usr/local/bin/moonhub-launcher
+COPY $TARGETPLATFORM/moonhub-launcher-tui /usr/local/bin/moonhub-launcher-tui
+
+ENTRYPOINT ["moonhub-launcher"]
+CMD ["-public", "-no-browser"]

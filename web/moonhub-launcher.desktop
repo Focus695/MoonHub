@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=MoonHub Launcher
+Comment=Web-based configuration and management UI for MoonHub
+Exec=moonhub-launcher
+Icon=moonhub-launcher
+Terminal=true
+Type=Application
+Categories=Utility;Network;
+Keywords=moonhub;ai;agent;bot;

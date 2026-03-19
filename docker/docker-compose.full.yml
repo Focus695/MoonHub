@@ -1,0 +1,44 @@
+services:
+  # ─────────────────────────────────────────────
+  # MoonHub Agent (one-shot query) - Full MCP Support
+  #   docker compose -f docker/docker-compose.full.yml run --rm moonhub-agent -m "Hello"
+  # ─────────────────────────────────────────────
+  moonhub-agent:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.full
+    container_name: moonhub-agent-full
+    profiles:
+      - agent
+    volumes:
+      - ../config/config.json:/root/.moonhub/config.json:ro
+      - moonhub-workspace:/root/.moonhub/workspace
+      - moonhub-npm-cache:/root/.npm # npm cache for faster MCP server installs
+    entrypoint: ["moonhub", "agent"]
+    stdin_open: true
+    tty: true
+
+  # ─────────────────────────────────────────────
+  # MoonHub Gateway (Long-running Bot) - Full MCP Support
+  #   docker compose -f docker/docker-compose.full.yml --profile gateway up
+  # ─────────────────────────────────────────────
+  moonhub-gateway:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.full
+    container_name: moonhub-gateway-full
+    restart: unless-stopped
+    profiles:
+      - gateway
+    volumes:
+      # Configuration file
+      - ../config/config.json:/root/.moonhub/config.json:ro
+      # Persistent workspace (sessions, memory, logs)
+      - moonhub-workspace:/root/.moonhub/workspace
+      # NPM cache for faster MCP server installs
+      - moonhub-npm-cache:/root/.npm
+    command: ["gateway"]
+
+volumes:
+  moonhub-workspace:
+  moonhub-npm-cache: # Cache npm packages to speed up MCP server installations

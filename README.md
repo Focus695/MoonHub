@@ -1,0 +1,68 @@
+# MoonHub
+
+> [!NOTE]
+> **基于声明 (Based On)**
+>
+> 本项目基于 [TinyClaw](https://github.com/wgtechlabs/tinyclaw) 的诸多特性与 [PicoClaw](https://github.com/sipeed/picoclaw) 的轻量化设计融合更改，并将在本项目上发展独有功能。本项目遵循 GPL-3.0 许可证。
+
+## Features
+
+### Implemented
+
+- **Adaptive Memory** — 3-layer memory system (episodic, semantic FTS5, temporal decay) that learns what to remember and forget over time.
+- **Self-Improving** — Behavioral pattern detection system that learns from user feedback, tracks tool usage preferences, and evolves patterns over time.
+
+### Planned
+
+- ~~**Self-Improving** — Behavioral pattern detection that makes the agent better with every interaction. It grows with you.~~ → **Implemented**
+- **Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.
+- **Smart Routing** — 8-dimension query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.
+- **Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.
+- **SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.
+- **Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.
+- **Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.
+
+## Changelog
+
+<details>
+<summary><strong>2025-03-19 — Self-Improving System Implementation</strong></summary>
+
+#### New Features
+
+**Self-Improving Behavioral Pattern Detection System** (`pkg/learning/`)
+
+A comprehensive learning system that makes the agent better with every interaction:
+
+- **Pattern Detector** — Multi-layer signal detection using regex patterns, semantic keyword analysis, and conversation flow analysis. Supports both English and Chinese feedback detection.
+- **Tool Tracker** — Tracks tool usage statistics including success rates, user acceptance/rejection, duration metrics (avg, P50, P95), and preference scoring.
+- **Behavioral Scorer** — Multi-dimensional scoring system measuring response quality, tool efficiency, context relevance, correction rate, and adaptation speed.
+- **Pattern Evolution** — Ebbinghaus-inspired decay algorithm, pattern merging, pruning of stale patterns, and contradiction detection.
+- **Proactive Suggestions** — Generates optimization suggestions based on detected patterns and behavioral trends.
+- **Agent Integration** — Seamless integration with the agent loop for automatic learning during conversations.
+
+#### Technical Improvements
+
+- Added FTS5 full-text search for pattern queries with proper special character escaping
+- Implemented proper JSON error handling throughout the persistence layer
+- Fixed SQL parameter mismatches in tool usage tracking
+- Added comprehensive unit tests (43 tests, 100% pass rate)
+- Updated golangci-lint configuration to v2 format
+
+#### Bug Fixes
+
+- Fixed `GetAllPatterns()`, `GetPatternsByCategory()`, `GetToolUsagePatterns()` returning nil instead of empty slices
+- Fixed `deduplicateSignals()` returning nil instead of empty slice
+- Fixed `RecordUserAcceptance()` not incrementing `UserAcceptedCalls` counter
+- Fixed `calculatePreference()` using wrong metric (success rate instead of acceptance rate)
+- Removed premature `break` statements in pattern detection loops to capture all matching signals
+
+#### Files Changed
+
+- `pkg/learning/` — New package (14 files, ~3000 lines)
+- `pkg/agent/loop.go` — Learning integration in agent loop
+- `pkg/agent/context.go` — Learning context injection
+- `pkg/agent/memory.go` — Memory-learning bridge
+- `pkg/config/config.go` — Learning configuration options
+- `.golangci.yaml` — Updated to v2 format
+
+</details>

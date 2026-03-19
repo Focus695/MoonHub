@@ -1,0 +1,265 @@
+// MoonHub - Ultra-lightweight personal AI agent
+// Adaptive Memory System - Core Engine
+// License: MIT
+
+package adaptive_memory
+
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/google/uuid"
+)
+
+// Engine implements the MemoryEngine interface
+type Engine struct {
+	store        *Store
+	segmenter    *ChineseSegmenter
+	consolidator *Consolidator
+	config       Config
+}
+
+// NewMemoryEngine creates a new memory engine
+func NewMemoryEngine(config Config) (*Engine, error) {
+	store, err := NewStore(config)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create store: %w", err)
+	}
+
+	segmenter := NewChineseSegmenter(config.EnableChinese)
+
+	// Initialize segmenter if Chinese is enabled
+	if config.EnableChinese {
+		gseSeg, err := NewGSESegmenter()
+		if err == nil {
+			segmenter.SetSegmenter(gseSeg)
+		} else {
+			// Fallback to simple space-based segmentation when GSE fails
+			segmenter.SetSegmenter(NewSimpleSegmenter())
+		}
+	}
+
+	consolidator := NewConsolidator(store, config)
+
+	return &Engine{
+		store:        store,
+		segmenter:    segmenter,
+		consolidator: consolidator,
+		config:       config,
+	}, nil
+}
+
+// RecordEvent stores a new episodic memory event
+func (e *Engine) RecordEvent(userID string, event EventInput) (string, error) {
+	// Generate ID
+	id := uuid.New().String()
+
+	// Determine importance
+	importance := GetDefaultImportance(event.Type)
+	if event.Importance != nil {
+		importance = *event.Importance
+	}
+
+	// Segment content for Chinese
+	_, contentTokens := e.segmenter.PrepareForFTS(event.Content)
+
+	// Create record
+	now := NowMs()
+	record := &EpisodicRecord{
+		ID:             id,
+		UserID:         userID,
+		EventType:      event.Type,
+		Content:        event.Content,
+		ContentTokens:  contentTokens,
+		Outcome:        event.Outcome,
+		Importance:     importance,
+		AccessCount:    0,
+		CreatedAt:      now,
+		LastAccessedAt: now,
+	}
+
+	// Insert into store
+	err := e.store.Insert(context.Background(), record)
+	if err != nil {
+		return "", fmt.Errorf("failed to record event: %w", err)
+	}
+
+	return id, nil
+}
+
+// Search retrieves memories using hybrid scoring (FTS5 + temporal + importance)
+func (e *Engine) Search(userID, query string, limit int) ([]MemorySearchResult, error) {
+	if limit <= 0 {
+		limit = e.config.FTSMaxResults
+	}
+
+	// Sanitize query for FTS5
+	ftsQuery := SanitizeFTSQuery(query)
+	if ftsQuery == "" {
+		return nil, nil
+	}
+
+	// Segment query for Chinese
+	queryTokens := e.segmenter.SmartSegment(query)
+
+	// Search in both content and content_tokens
+	records, err := e.store.Search(context.Background(), userID, queryTokens, e.config.FTSMaxResults)
+	if err != nil {
+		return nil, fmt.Errorf("search failed: %w", err)
+	}
+
+	if len(records) == 0 {
+		return nil, nil
+	}
+
+	now := NowMs()
+	results := make([]MemorySearchResult, 0, len(records))
+
+	// Find max absolute FTS rank for normalization
+	maxAbsRank := 0.0
+	for _, record := range records {
+		absRank := record.Importance // Using Importance field temporarily for FTS rank
+		if absRank > maxAbsRank {
+			maxAbsRank = absRank
+		}
+	}
+
+	// Calculate relevance scores
+	for _, record := range records {
+		// Compute temporal score
+		temporalScore := ComputeTemporalScore(record.LastAccessedAt, int64(record.AccessCount), now)
+
+		// Normalize FTS rank (stored in Importance temporarily)
+		ftsRank := NormalizeFTSRank(record.Importance, maxAbsRank)
+
+		// Get actual importance (reset from temporary field)
+		actualImportance := GetDefaultImportance(record.EventType)
+
+		// Compute final relevance score
+		relevance := ComputeRelevanceScore(ftsRank, temporalScore, actualImportance)
+
+		results = append(results, MemorySearchResult{
+			ID:             record.ID,
+			Content:        record.Content,
+			RelevanceScore: relevance,
+			Source:         "episodic",
+		})
+	}
+
+	// Sort by relevance score
+	sortResultsByRelevance(results)
+
+	// Limit results
+	if len(results) > limit {
+		results = results[:limit]
+	}
+
+	return results, nil
+}
+
+// GetContextForAgent returns formatted memory context for LLM prompts
+func (e *Engine) GetContextForAgent(userID string, query *string) (string, error) {
+	var results []MemorySearchResult
+	var err error
+
+	if query != nil && *query != "" {
+		// Search-based retrieval
+		results, err = e.Search(userID, *query, e.config.ContextMaxResults)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// Also get high-importance recent memories
+	highImportance, err := e.store.GetHighImportance(context.Background(), userID, 0.7, e.config.ContextMaxResults)
+	if err != nil {
+		return "", err
+	}
+
+	// Merge results (deduplicate by ID)
+	seenIDs := make(map[string]bool)
+	var allResults []MemorySearchResult
+
+	for _, r := range results {
+		if !seenIDs[r.ID] {
+			seenIDs[r.ID] = true
+			allResults = append(allResults, r)
+		}
+	}
+
+	for _, record := range highImportance {
+		if !seenIDs[record.ID] {
+			seenIDs[record.ID] = true
+			// Calculate relevance for high-importance records
+			temporalScore := ComputeTemporalScore(record.LastAccessedAt, int64(record.AccessCount), NowMs())
+			relevance := ComputeRelevanceScore(0.5, temporalScore, record.Importance)
+
+			allResults = append(allResults, MemorySearchResult{
+				ID:             record.ID,
+				Content:        record.Content,
+				RelevanceScore: relevance,
+				Source:         "episodic",
+			})
+		}
+	}
+
+	if len(allResults) == 0 {
+		return "", nil
+	}
+
+	// Sort by relevance
+	sortResultsByRelevance(allResults)
+
+	// Limit final results
+	if len(allResults) > e.config.ContextMaxResults {
+		allResults = allResults[:e.config.ContextMaxResults]
+	}
+
+	// Format for LLM context
+	var sb strings.Builder
+	sb.WriteString("## 记忆上下文\n\n")
+	sb.WriteString("以下是相关的记忆信息，用于辅助回答：\n\n")
+
+	for i, result := range allResults {
+		sb.WriteString(fmt.Sprintf("%d. %s (相关性: %.2f)\n", i+1, result.Content, result.RelevanceScore))
+	}
+
+	return sb.String(), nil
+}
+
+// Reinforce strengthens a memory (bumps access count + timestamp)
+func (e *Engine) Reinforce(memoryID string) error {
+	return e.store.Reinforce(context.Background(), memoryID)
+}
+
+// GetEvent retrieves a single episodic record by ID
+func (e *Engine) GetEvent(id string) (*EpisodicRecord, error) {
+	return e.store.GetByID(context.Background(), id)
+}
+
+// GetEvents retrieves all events for a user (sorted by created_at DESC)
+func (e *Engine) GetEvents(userID string, limit int) ([]EpisodicRecord, error) {
+	return e.store.GetByUser(context.Background(), userID, limit)
+}
+
+// Consolidate performs memory maintenance (decay, prune, merge)
+func (e *Engine) Consolidate(userID string) (ConsolidationResult, error) {
+	return e.consolidator.Consolidate(context.Background(), userID)
+}
+
+// Close releases database resources
+func (e *Engine) Close() error {
+	return e.store.Close()
+}
+
+// sortResultsByRelevance sorts results by relevance score in descending order
+func sortResultsByRelevance(results []MemorySearchResult) {
+	for i := 0; i < len(results)-1; i++ {
+		for j := i + 1; j < len(results); j++ {
+			if results[j].RelevanceScore > results[i].RelevanceScore {
+				results[i], results[j] = results[j], results[i]
+			}
+		}
+	}
+}
