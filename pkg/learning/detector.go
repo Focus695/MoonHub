@@ -7,11 +7,16 @@ package learning
 import (
 	"regexp"
 	"strings"
+
+	"github.com/sipeed/moonhub/pkg/learning/i18n"
+	"github.com/sipeed/moonhub/pkg/learning/patterns"
 )
 
 // PatternDetector detects behavioral patterns from conversations
 type PatternDetector struct {
-	config Config
+	config   Config
+	i18n     *i18n.I18n
+	patterns *patterns.Manager
 
 	// Regex patterns for explicit feedback
 	positivePatterns   []*regexp.Regexp
@@ -47,7 +52,9 @@ type DetectionContext struct {
 // NewPatternDetector creates a new pattern detector
 func NewPatternDetector(config Config) *PatternDetector {
 	d := &PatternDetector{
-		config: config,
+		config:   config,
+		i18n:     i18n.New(config.Language),
+		patterns: patterns.NewManager(),
 	}
 
 	d.initPatterns()
@@ -58,46 +65,15 @@ func NewPatternDetector(config Config) *PatternDetector {
 
 // initPatterns initializes regex patterns for detection
 func (d *PatternDetector) initPatterns() {
-	// Positive patterns - user acceptance signals
-	d.positivePatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)^(perfect|great|thanks|exactly|nice|awesome|good|yes|correct)`),
-		regexp.MustCompile(`(?i)^(that'?s? (right|correct|it|what i (wanted|needed)))`),
-		regexp.MustCompile(`(?i)^(love it|nailed it|spot on)`),
-		regexp.MustCompile(`(?i)^(好的|很好|完美|谢谢|对|正确|正是我想要的)`), // Chinese
-	}
+	// Get patterns from pattern manager based on language setting
+	lang := d.i18n.GetLanguage()
+	ps := d.patterns.GetPatterns(lang)
 
-	// Negative patterns - user rejection signals
-	d.negativePatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)^(no|wrong|not what|that'?s? not|you misunderstood|incorrect)`),
-		regexp.MustCompile(`(?i)^(that'?s? (wrong|incorrect|not right))`),
-		regexp.MustCompile(`(?i)^(try again|redo|not quite)`),
-		regexp.MustCompile(`(?i)^(不对|错误|不是这个|再试一次|理解错了)`), // Chinese
-	}
-
-	// Correction patterns - user preference/correction signals
-	d.correctionPatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)^(actually|i meant|i prefer|next time|please don'?t|instead)`),
-		regexp.MustCompile(`(?i)^i (prefer|like|want|need) (.+)`),
-		regexp.MustCompile(`(?i)^don'?t ([^,]+), (instead )?(.+)`),
-		regexp.MustCompile(`(?i)^(remember|note) that i (.+)`),
-		regexp.MustCompile(`(?i)^其实|我的意思是|我更喜欢|下次|不要|相反|记住我喜欢`), // Chinese
-	}
-
-	// Workflow preference patterns
-	d.workflowPatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)always (run|do|use|check) (.+) (before|after|when) (.+)`),
-		regexp.MustCompile(`(?i)never (run|do|use) (.+) (when|if|unless) (.+)`),
-		regexp.MustCompile(`(?i)(prefer|like) (it|to) (be|use|have) (.+)`),
-		regexp.MustCompile(`(?i)每次|总是|从不|当.+时|之前|之后|喜欢用`), // Chinese
-	}
-
-	// Tool preference patterns
-	d.toolPreferencePatterns = []*regexp.Regexp{
-		regexp.MustCompile(`(?i)use (.+) instead of (.+)`),
-		regexp.MustCompile(`(?i)don'?t use (.+)`),
-		regexp.MustCompile(`(?i)(always|never) (run|call|use) (.+)`),
-		regexp.MustCompile(`(?i)用.+代替|不要用|总是用|从不用`), // Chinese
-	}
+	d.positivePatterns = ps.Positive
+	d.negativePatterns = ps.Negative
+	d.correctionPatterns = ps.Correction
+	d.workflowPatterns = ps.Workflow
+	d.toolPreferencePatterns = ps.ToolPref
 }
 
 // initSemanticIndicators initializes semantic keyword indicators

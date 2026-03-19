@@ -528,7 +528,9 @@ func TestWebFetch_Blocks6to4WithPrivateEmbed(t *testing.T) {
 // TestWebFetch_Allows6to4WithPublicEmbed verifies 6to4 with public embedded IPv4 is NOT blocked
 func TestWebFetch_Allows6to4WithPublicEmbed(t *testing.T) {
 	// Ensure SSRF checks are active (default) so we test the real code path
+	prev := allowPrivateWebFetchHosts.Load()
 	allowPrivateWebFetchHosts.Store(false)
+	t.Cleanup(func() { allowPrivateWebFetchHosts.Store(prev) })
 	tool, err := NewWebFetchTool(50000, testFetchLimit)
 	if err != nil {
 		t.Fatalf("Failed to create web fetch tool: %v", err)

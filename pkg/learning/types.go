@@ -240,6 +240,7 @@ type EvolutionResult struct {
 // Config holds configuration for the learning engine
 type Config struct {
 	DBPath                       string  `json:"db_path"`
+	Language                     string  `json:"language"`                       // Default: "auto" (options: "en", "zh", "auto")
 	MinConfidence                float64 `json:"min_confidence"`                 // Default: 0.7
 	MaxExamples                  int     `json:"max_examples"`                   // Default: 10
 	EnableSemanticDetection      bool    `json:"enable_semantic_detection"`      // Default: true
@@ -256,6 +257,7 @@ type Config struct {
 // DefaultConfig returns sensible defaults
 func DefaultConfig(dbPath string) Config {
 	return Config{
+		Language:                     "auto",
 		DBPath:                       dbPath,
 		MinConfidence:                0.7,
 		MaxExamples:                  10,
