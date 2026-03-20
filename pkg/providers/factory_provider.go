@@ -6,12 +6,33 @@
 package providers
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/sipeed/moonhub/pkg/config"
 	anthropicmessages "github.com/sipeed/moonhub/pkg/providers/anthropic_messages"
 )
+
+// ErrSkipProvider is returned by a plugin when it does not handle the given config
+// (e.g., openai_oauth when auth is API key). The resolver should try the next plugin.
+var ErrSkipProvider = errors.New("plugin does not handle this config")
+
+// PluginProviderResolver is a function that attempts to create a provider from a plugin.
+// It is set by the gateway to avoid circular imports (plugin -> providers).
+// Returns (provider, modelID, nil) on success, or (nil, "", err) when no plugin handles the config.
+// When err is ErrSkipProvider, the resolver should try the next plugin.
+type PluginProviderResolver func(modelCfg *config.ModelConfig) (LLMProvider, string, error)
+
+// pluginResolver is set by the gateway at startup
+var pluginResolver PluginProviderResolver
+
+// SetPluginProviderResolver sets the resolver used by CreateProviderFromConfig.
+// Must be called before CreateProvider. The gateway calls this with a function
+// that checks plugin.GlobalRegistry().GetProviderPlugins().
+func SetPluginProviderResolver(resolver PluginProviderResolver) {
+	pluginResolver = resolver
+}
 
 // createClaudeAuthProvider creates a Claude provider using OAuth credentials from auth store.
 func createClaudeAuthProvider() (LLMProvider, error) {
@@ -27,6 +48,12 @@ func createClaudeAuthProvider() (LLMProvider, error) {
 
 // createCodexAuthProvider creates a Codex provider using OAuth credentials from auth store.
 func createCodexAuthProvider() (LLMProvider, error) {
+	return CreateCodexProviderFromAuthStore()
+}
+
+// CreateCodexProviderFromAuthStore creates a Codex provider from OAuth credentials.
+// Exported for use by provider plugins.
+func CreateCodexProviderFromAuthStore() (LLMProvider, error) {
 	cred, err := getCredential("openai")
 	if err != nil {
 		return nil, fmt.Errorf("loading auth credentials: %w", err)
@@ -35,6 +62,12 @@ func createCodexAuthProvider() (LLMProvider, error) {
 		return nil, fmt.Errorf("no credentials for openai. Run: moonhub auth login --provider openai")
 	}
 	return NewCodexProviderWithTokenSource(cred.AccessToken, cred.AccountID, createCodexTokenSource()), nil
+}
+
+// CreateClaudeProviderFromAuthStore creates a Claude provider from OAuth credentials.
+// Exported for use by provider plugins.
+func CreateClaudeProviderFromAuthStore() (LLMProvider, error) {
+	return createClaudeAuthProvider()
 }
 
 // ExtractProtocol extracts the protocol prefix and model identifier from a model string.
@@ -54,6 +87,7 @@ func ExtractProtocol(model string) (protocol, modelID string) {
 
 // CreateProviderFromConfig creates a provider based on the ModelConfig.
 // It uses the protocol prefix in the Model field to determine which provider to create.
+// If SetPluginProviderResolver was called, it tries plugins first.
 // Supported protocols: openai, litellm, anthropic, anthropic-messages, antigravity,
 // claude-cli, codex-cli, github-copilot
 // Returns the provider, the model ID (without protocol prefix), and any error.
@@ -67,6 +101,18 @@ func CreateProviderFromConfig(cfg *config.ModelConfig) (LLMProvider, string, err
 	}
 
 	protocol, modelID := ExtractProtocol(cfg.Model)
+
+	// Try plugin resolver first (set by gateway to avoid circular imports)
+	if pluginResolver != nil {
+		provider, id, err := pluginResolver(cfg)
+		if err == nil {
+			return provider, id, nil
+		}
+		if !errors.Is(err, ErrSkipProvider) {
+			return nil, "", err
+		}
+		// No plugin handled it — fall through to built-in factory
+	}
 
 	switch protocol {
 	case "openai":

@@ -23,6 +23,7 @@ import (
 	"github.com/sipeed/moonhub/pkg/health"
 	"github.com/sipeed/moonhub/pkg/logger"
 	"github.com/sipeed/moonhub/pkg/media"
+	"github.com/sipeed/moonhub/pkg/framework"
 )
 
 const (
@@ -192,123 +193,76 @@ func NewManager(cfg *config.Config, messageBus *bus.MessageBus, store media.Medi
 	return m, nil
 }
 
-// initChannel is a helper that looks up a factory by name and creates the channel.
-func (m *Manager) initChannel(name, displayName string) {
-	f, ok := getFactory(name)
-	if !ok {
-		logger.WarnCF("channels", "Factory not registered", map[string]any{
-			"channel": displayName,
+func (m *Manager) initChannels() error {
+	logger.InfoC("channels", "Initializing channel manager")
+
+	// Load builtin plugins to trigger init() registration
+	plugin.LoadBuiltin()
+
+	// Get all registered channel plugins
+	registry := plugin.GlobalRegistry()
+	channelPlugins := registry.GetChannelPlugins()
+
+	// Initialize each enabled channel plugin
+	for id, cp := range channelPlugins {
+		if !cp.IsEnabled(m.config) {
+			continue
+		}
+
+		meta := cp.Metadata()
+		displayName := meta.Name
+
+		logger.DebugCF("channels", "Attempting to initialize channel via plugin", map[string]any{
+			"plugin_id": id,
+			"channel":   displayName,
 		})
-		return
-	}
-	logger.DebugCF("channels", "Attempting to initialize channel", map[string]any{
-		"channel": displayName,
-	})
-	ch, err := f(m.config, m.bus)
-	if err != nil {
-		logger.ErrorCF("channels", "Failed to initialize channel", map[string]any{
-			"channel": displayName,
-			"error":   err.Error(),
-		})
-	} else {
+
+		ch, err := cp.CreateChannel(m.config, m.bus)
+		if err != nil {
+			logger.ErrorCF("channels", "Failed to initialize channel", map[string]any{
+				"channel": displayName,
+				"error":   err.Error(),
+			})
+			continue
+		}
+
+		// Plugin returns plugin.Channel; assert to channels.Channel for injection and storage
+		chChannel, ok := ch.(Channel)
+		if !ok {
+			logger.ErrorCF("channels", "Plugin channel does not implement channels.Channel", map[string]any{
+				"plugin_id": id,
+				"channel":   displayName,
+			})
+			continue
+		}
+
 		// Inject MediaStore if channel supports it
 		if m.mediaStore != nil {
-			if setter, ok := ch.(interface{ SetMediaStore(s media.MediaStore) }); ok {
+			if setter, ok := chChannel.(interface{ SetMediaStore(s media.MediaStore) }); ok {
 				setter.SetMediaStore(m.mediaStore)
 			}
 		}
 		// Inject PlaceholderRecorder if channel supports it
-		if setter, ok := ch.(interface{ SetPlaceholderRecorder(r PlaceholderRecorder) }); ok {
+		if setter, ok := chChannel.(interface{ SetPlaceholderRecorder(r PlaceholderRecorder) }); ok {
 			setter.SetPlaceholderRecorder(m)
 		}
 		// Inject owner reference so BaseChannel.HandleMessage can auto-trigger typing/reaction
-		if setter, ok := ch.(interface{ SetOwner(ch Channel) }); ok {
-			setter.SetOwner(ch)
+		if setter, ok := chChannel.(interface{ SetOwner(ch Channel) }); ok {
+			setter.SetOwner(chChannel)
 		}
-		m.channels[name] = ch
-		logger.InfoCF("channels", "Channel enabled successfully", map[string]any{
-			"channel": displayName,
+
+		prefix := cp.ChannelPrefix()
+		m.channels[prefix] = chChannel
+		logger.InfoCF("channels", "Channel enabled successfully via plugin", map[string]any{
+			"plugin_id": id,
+			"channel":   displayName,
+			"prefix":    prefix,
 		})
-	}
-}
-
-func (m *Manager) initChannels() error {
-	logger.InfoC("channels", "Initializing channel manager")
-
-	if m.config.Channels.Telegram.Enabled && m.config.Channels.Telegram.Token != "" {
-		m.initChannel("telegram", "Telegram")
-	}
-
-	if m.config.Channels.WhatsApp.Enabled {
-		waCfg := m.config.Channels.WhatsApp
-		if waCfg.UseNative {
-			m.initChannel("whatsapp_native", "WhatsApp Native")
-		} else if waCfg.BridgeURL != "" {
-			m.initChannel("whatsapp", "WhatsApp")
-		}
-	}
-
-	if m.config.Channels.Feishu.Enabled {
-		m.initChannel("feishu", "Feishu")
-	}
-
-	if m.config.Channels.Discord.Enabled && m.config.Channels.Discord.Token != "" {
-		m.initChannel("discord", "Discord")
-	}
-
-	if m.config.Channels.MaixCam.Enabled {
-		m.initChannel("maixcam", "MaixCam")
-	}
-
-	if m.config.Channels.QQ.Enabled {
-		m.initChannel("qq", "QQ")
-	}
-
-	if m.config.Channels.DingTalk.Enabled && m.config.Channels.DingTalk.ClientID != "" {
-		m.initChannel("dingtalk", "DingTalk")
-	}
-
-	if m.config.Channels.Slack.Enabled && m.config.Channels.Slack.BotToken != "" {
-		m.initChannel("slack", "Slack")
-	}
-
-	if m.config.Channels.Matrix.Enabled &&
-		m.config.Channels.Matrix.Homeserver != "" &&
-		m.config.Channels.Matrix.UserID != "" &&
-		m.config.Channels.Matrix.AccessToken != "" {
-		m.initChannel("matrix", "Matrix")
-	}
-
-	if m.config.Channels.LINE.Enabled && m.config.Channels.LINE.ChannelAccessToken != "" {
-		m.initChannel("line", "LINE")
-	}
-
-	if m.config.Channels.OneBot.Enabled && m.config.Channels.OneBot.WSUrl != "" {
-		m.initChannel("onebot", "OneBot")
-	}
-
-	if m.config.Channels.WeCom.Enabled && m.config.Channels.WeCom.Token != "" {
-		m.initChannel("wecom", "WeCom")
-	}
-
-	if m.config.Channels.WeComAIBot.Enabled && m.config.Channels.WeComAIBot.Token != "" {
-		m.initChannel("wecom_aibot", "WeCom AI Bot")
-	}
-
-	if m.config.Channels.WeComApp.Enabled && m.config.Channels.WeComApp.CorpID != "" {
-		m.initChannel("wecom_app", "WeCom App")
-	}
-
-	if m.config.Channels.Pico.Enabled && m.config.Channels.Pico.Token != "" {
-		m.initChannel("pico", "Pico")
-	}
-
-	if m.config.Channels.IRC.Enabled && m.config.Channels.IRC.Server != "" {
-		m.initChannel("irc", "IRC")
 	}
 
 	logger.InfoCF("channels", "Channel initialization completed", map[string]any{
 		"enabled_channels": len(m.channels),
+		"total_plugins":    len(channelPlugins),
 	})
 
 	return nil

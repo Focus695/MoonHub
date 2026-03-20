@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
@@ -13,21 +14,37 @@ import (
 	"github.com/sipeed/moonhub/pkg/agent"
 	"github.com/sipeed/moonhub/pkg/bus"
 	"github.com/sipeed/moonhub/pkg/channels"
-	_ "github.com/sipeed/moonhub/pkg/channels/dingtalk"
-	_ "github.com/sipeed/moonhub/pkg/channels/discord"
-	_ "github.com/sipeed/moonhub/pkg/channels/feishu"
-	_ "github.com/sipeed/moonhub/pkg/channels/irc"
-	_ "github.com/sipeed/moonhub/pkg/channels/line"
-	_ "github.com/sipeed/moonhub/pkg/channels/maixcam"
-	_ "github.com/sipeed/moonhub/pkg/channels/matrix"
-	_ "github.com/sipeed/moonhub/pkg/channels/onebot"
-	_ "github.com/sipeed/moonhub/pkg/channels/pico"
-	_ "github.com/sipeed/moonhub/pkg/channels/qq"
-	_ "github.com/sipeed/moonhub/pkg/channels/slack"
-	_ "github.com/sipeed/moonhub/pkg/channels/telegram"
-	_ "github.com/sipeed/moonhub/pkg/channels/wecom"
-	_ "github.com/sipeed/moonhub/pkg/channels/whatsapp"
-	_ "github.com/sipeed/moonhub/pkg/channels/whatsapp_native"
+	"github.com/sipeed/moonhub/pkg/framework"
+	// Channel plugin imports - trigger init() registration
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/dingtalk"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/discord"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/feishu"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/irc"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/line"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/maixcam"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/matrix"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/onebot"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/pico"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/qq"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/slack"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/telegram"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom_app"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom_aibot"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/whatsapp"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/whatsapp_native"
+	// Provider plugin imports - trigger init() registration
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/anthropic"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/anthropic_messages"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/antigravity"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/claude_cli"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/codex_cli"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/github_copilot"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/openai_compat"
+	_ "github.com/sipeed/moonhub/pkg/plugins/providers/openai_oauth"
+	// Tool plugin imports - trigger init() registration
+	_ "github.com/sipeed/moonhub/pkg/plugins/tools/message"
+	_ "github.com/sipeed/moonhub/pkg/plugins/tools/web"
 	"github.com/sipeed/moonhub/pkg/config"
 	"github.com/sipeed/moonhub/pkg/cron"
 	"github.com/sipeed/moonhub/pkg/devices"
@@ -65,6 +82,26 @@ func gatewayCmd(debug bool) error {
 		fmt.Println("🔍 Debug mode enabled")
 	}
 
+	// Set provider plugin resolver before any CreateProvider call.
+	// This allows CreateProviderFromConfig to try plugins first, then fall back to built-in factory.
+	providers.SetPluginProviderResolver(func(modelCfg *config.ModelConfig) (providers.LLMProvider, string, error) {
+		protocol, modelID := providers.ExtractProtocol(modelCfg.Model)
+		for _, pp := range plugin.GlobalRegistry().GetProviderPlugins() {
+			if !pp.SupportsProtocol(protocol) {
+				continue
+			}
+			provider, err := pp.CreateProviderFromModelConfig(modelCfg)
+			if err == nil {
+				return provider, modelID, nil
+			}
+			if errors.Is(err, providers.ErrSkipProvider) {
+				continue
+			}
+			return nil, "", err
+		}
+		return nil, "", providers.ErrSkipProvider
+	})
+
 	configPath := internal.GetConfigPath()
 	cfg, err := internal.LoadConfig()
 	if err != nil {
@@ -82,7 +119,14 @@ func gatewayCmd(debug bool) error {
 	}
 
 	msgBus := bus.NewMessageBus()
-	agentLoop := agent.NewAgentLoop(cfg, msgBus, provider)
+
+	// Initialize tool plugins and merge their tools into agents
+	pluginMgr := plugin.NewManager(cfg, msgBus, nil)
+	if err := pluginMgr.InitializeToolsOnly(context.Background()); err != nil {
+		return fmt.Errorf("error initializing tool plugins: %w", err)
+	}
+
+	agentLoop := agent.NewAgentLoopWithPluginTools(cfg, msgBus, provider, pluginMgr.ToolRegistry())
 
 	// Print agent startup info
 	fmt.Println("\n📦 Agent Status:")

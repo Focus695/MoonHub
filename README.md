@@ -11,11 +11,12 @@
 
 - **Adaptive Memory** — 3-layer memory system (episodic, semantic FTS5, temporal decay) that learns what to remember and forget over time.
 - **Self-Improving** — Behavioral pattern detection system that learns from user feedback, tracks tool usage preferences, and evolves patterns over time.
+- **Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.
 
 ### Planned
 
 - ~~**Self-Improving** — Behavioral pattern detection that makes the agent better with every interaction. It grows with you.~~ → **Implemented**
-- **Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.
+- ~~**Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.~~ → **Implemented**
 - **Smart Routing** — 8-dimension query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.
 - **Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.
 - **SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.
@@ -23,6 +24,46 @@
 - **Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.
 
 ## Changelog
+
+<details>
+<summary><strong>2025-03-20 — Plugin Architecture Implementation</strong></summary>
+
+#### New Features
+
+**Plugin Architecture System** (`pkg/framework/`, `pkg/plugins/`)
+
+A comprehensive plugin system that makes channels, providers, and tools all extensible plugins:
+
+- **Core Framework** — Plugin types, interfaces (Channel/Provider/Tool), registry system, and lifecycle manager
+- **Channel Plugins** — 16 channel plugins migrated (Telegram, Discord, Slack, Matrix, Feishu, QQ, DingTalk, LINE, OneBot, WeCom, WeCom App, WeCom AIBot, Pico, IRC, MaixCam, WhatsApp)
+- **Provider Plugins** — 8 provider plugins migrated (OpenAI Compat, OpenAI OAuth, Anthropic, Anthropic Messages, Antigravity, Claude CLI, Codex CLI, GitHub Copilot)
+- **Tool Plugins** — Web tools (web_search, web_fetch) and message tool migrated to plugin system
+- **Plugin Resolver** — Provider factory now supports plugin-first resolution with built-in fallback
+
+#### Technical Improvements
+
+- Added `SetPluginProviderResolver` for provider plugin integration
+- Added `NewAgentLoopWithPluginTools` for tool plugin merging
+- Added `MergeFrom` method to ToolRegistry for combining plugin tools
+- Added `InitializeToolsOnly` to plugin manager for early tool initialization
+- Updated channel manager to use plugin system for initialization
+- Removed legacy factory pattern code from channel registry
+
+#### Files Changed
+
+- `pkg/framework/` — New package (7 core files)
+- `pkg/plugins/channels/` — 16 channel plugins
+- `pkg/plugins/providers/` — 8 provider plugins
+- `pkg/plugins/tools/` — 2 tool plugins
+- `pkg/plugins/docs/` — Plugin documentation
+- `cmd/moonhub/internal/gateway/helpers.go` — Plugin imports and initialization
+- `pkg/agent/loop.go` — Plugin tool integration
+- `pkg/channels/manager.go` — Plugin-based channel initialization
+- `pkg/providers/factory_provider.go` — Plugin resolver support
+- `pkg/tools/registry.go` — MergeFrom method
+- `docs/implementation/plugin-architecture-status.md` — Implementation status
+
+</details>
 
 <details>
 <summary><strong>2025-03-19 — Self-Improving System Implementation</strong></summary>

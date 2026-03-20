@@ -50,6 +50,8 @@ type AgentLoop struct {
 	cmdRegistry    *commands.Registry
 	mcp            mcpRuntime
 	mu             sync.RWMutex
+	// pluginToolReg holds tools from plugin manager; used when reloading registry
+	pluginToolReg *tools.ToolRegistry
 	// Track active requests for safe provider cleanup
 	activeRequests sync.WaitGroup
 }
@@ -82,10 +84,32 @@ func NewAgentLoop(
 	msgBus *bus.MessageBus,
 	provider providers.LLMProvider,
 ) *AgentLoop {
+	return NewAgentLoopWithPluginTools(cfg, msgBus, provider, nil)
+}
+
+// NewAgentLoopWithPluginTools creates an agent loop, optionally merging tools from a plugin registry.
+// If pluginToolReg is non-nil, its tools are merged into each agent before registerSharedTools runs.
+func NewAgentLoopWithPluginTools(
+	cfg *config.Config,
+	msgBus *bus.MessageBus,
+	provider providers.LLMProvider,
+	pluginToolReg *tools.ToolRegistry,
+) *AgentLoop {
 	registry := NewAgentRegistry(cfg, provider)
 
-	// Register shared tools to all agents
-	registerSharedTools(cfg, msgBus, registry, provider)
+	// Merge plugin tools into each agent first
+	if pluginToolReg != nil {
+		for _, agentID := range registry.ListAgentIDs() {
+			agent, ok := registry.GetAgent(agentID)
+			if !ok {
+				continue
+			}
+			agent.Tools.MergeFrom(pluginToolReg)
+		}
+	}
+
+	// Register shared tools to all agents (skips web/message if already from plugin)
+	registerSharedTools(cfg, msgBus, registry, provider, pluginToolReg)
 
 	// Set up shared fallback chain
 	cooldown := providers.NewCooldownTracker()
@@ -99,10 +123,11 @@ func NewAgentLoop(
 	}
 
 	al := &AgentLoop{
-		bus:         msgBus,
-		cfg:         cfg,
-		registry:    registry,
-		state:       stateManager,
+		bus:           msgBus,
+		cfg:           cfg,
+		registry:      registry,
+		state:         stateManager,
+		pluginToolReg: pluginToolReg,
 		summarizing: sync.Map{},
 		fallback:    fallbackChain,
 		cmdRegistry: commands.NewRegistry(commands.BuiltinDefinitions()),
@@ -111,20 +136,32 @@ func NewAgentLoop(
 	return al
 }
 
+// hasToolFromReg returns true if the registry has the named tool.
+func hasToolFromReg(reg *tools.ToolRegistry, name string) bool {
+	_, ok := reg.Get(name)
+	return ok
+}
+
 // registerSharedTools registers tools that are shared across all agents (web, message, spawn).
+// If pluginToolReg is non-nil and contains web/message tools, those are skipped (already merged).
 func registerSharedTools(
 	cfg *config.Config,
 	msgBus *bus.MessageBus,
 	registry *AgentRegistry,
 	provider providers.LLMProvider,
+	pluginToolReg *tools.ToolRegistry,
 ) {
+	pluginHasWeb := pluginToolReg != nil && hasToolFromReg(pluginToolReg, "web_search")
+	pluginHasWebFetch := pluginToolReg != nil && hasToolFromReg(pluginToolReg, "web_fetch")
+	pluginHasMessage := pluginToolReg != nil && hasToolFromReg(pluginToolReg, "message")
+
 	for _, agentID := range registry.ListAgentIDs() {
 		agent, ok := registry.GetAgent(agentID)
 		if !ok {
 			continue
 		}
 
-		if cfg.Tools.IsToolEnabled("web") {
+		if cfg.Tools.IsToolEnabled("web") && !pluginHasWeb {
 			searchTool, err := tools.NewWebSearchTool(tools.WebSearchToolOptions{
 				BraveAPIKeys:         config.MergeAPIKeys(cfg.Tools.Web.Brave.APIKey, cfg.Tools.Web.Brave.APIKeys),
 				BraveMaxResults:      cfg.Tools.Web.Brave.MaxResults,
@@ -157,7 +194,7 @@ func registerSharedTools(
 				agent.Tools.Register(searchTool)
 			}
 		}
-		if cfg.Tools.IsToolEnabled("web_fetch") {
+		if cfg.Tools.IsToolEnabled("web_fetch") && !pluginHasWebFetch {
 			fetchTool, err := tools.NewWebFetchToolWithProxy(50000, cfg.Tools.Web.Proxy, cfg.Tools.Web.FetchLimitBytes)
 			if err != nil {
 				logger.ErrorCF("agent", "Failed to create web fetch tool", map[string]any{"error": err.Error()})
@@ -175,7 +212,7 @@ func registerSharedTools(
 		}
 
 		// Message tool
-		if cfg.Tools.IsToolEnabled("message") {
+		if cfg.Tools.IsToolEnabled("message") && !pluginHasMessage {
 			messageTool := tools.NewMessageTool()
 			messageTool.SetSendCallback(func(channel, chatID, content string) error {
 				pubCtx, pubCancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -414,8 +451,17 @@ func (al *AgentLoop) ReloadProviderAndConfig(
 		return fmt.Errorf("context canceled after registry creation: %w", err)
 	}
 
-	// Ensure shared tools are re-registered on the new registry
-	registerSharedTools(cfg, al.bus, registry, provider)
+	// Merge plugin tools and ensure shared tools are re-registered on the new registry
+	if al.pluginToolReg != nil {
+		for _, agentID := range registry.ListAgentIDs() {
+			agent, ok := registry.GetAgent(agentID)
+			if !ok {
+				continue
+			}
+			agent.Tools.MergeFrom(al.pluginToolReg)
+		}
+	}
+	registerSharedTools(cfg, al.bus, registry, provider, al.pluginToolReg)
 
 	// Atomically swap the config and registry under write lock
 	// This ensures readers see a consistent pair

@@ -303,6 +303,37 @@ func (r *ToolRegistry) List() []string {
 	return r.sortedToolNames()
 }
 
+// MergeFrom copies all tools from the source registry into this registry.
+// Used to merge plugin tools into agent registries. Skips tools already present.
+func (r *ToolRegistry) MergeFrom(src *ToolRegistry) {
+	src.mu.RLock()
+	names := make([]string, 0, len(src.tools))
+	for name := range src.tools {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	entries := make([]*ToolEntry, 0, len(names))
+	for _, name := range names {
+		entries = append(entries, src.tools[name])
+	}
+	src.mu.RUnlock()
+
+	for _, entry := range entries {
+		name := entry.Tool.Name()
+		r.mu.Lock()
+		_, exists := r.tools[name]
+		r.mu.Unlock()
+		if exists {
+			continue
+		}
+		if entry.IsCore {
+			r.Register(entry.Tool)
+		} else {
+			r.RegisterHidden(entry.Tool)
+		}
+	}
+}
+
 // Count returns the number of registered tools.
 func (r *ToolRegistry) Count() int {
 	r.mu.RLock()

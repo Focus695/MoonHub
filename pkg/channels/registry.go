@@ -23,10 +23,3 @@ func RegisterFactory(name string, f ChannelFactory) {
 	factories[name] = f
 }
 
-// getFactory looks up a channel factory by name.
-func getFactory(name string) (ChannelFactory, bool) {
-	factoriesMu.RLock()
-	defer factoriesMu.RUnlock()
-	f, ok := factories[name]
-	return f, ok
-}

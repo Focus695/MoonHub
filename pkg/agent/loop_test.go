@@ -364,6 +364,70 @@ func (m *mockCustomTool) Execute(ctx context.Context, args map[string]any) *tool
 	return tools.SilentResult("Custom tool executed")
 }
 
+// pluginToolStub implements tools.Tool for simulating tools registered by pkg/plugins (same names as shared tools).
+type pluginToolStub struct {
+	name string
+	mark string
+}
+
+func (p *pluginToolStub) Name() string { return p.name }
+
+func (p *pluginToolStub) Description() string { return "stub for plugin tool tests" }
+
+func (p *pluginToolStub) Parameters() map[string]any {
+	return map[string]any{
+		"type":       "object",
+		"properties": map[string]any{},
+	}
+}
+
+func (p *pluginToolStub) Execute(ctx context.Context, args map[string]any) *tools.ToolResult {
+	return tools.SilentResult(p.mark)
+}
+
+// pluginToolRegistryFixture builds a ToolRegistry like InitializeToolsOnly would, with identifiable stubs.
+func pluginToolRegistryFixture() (
+	reg *tools.ToolRegistry,
+	webSearch, webFetch, messageTool, extra *pluginToolStub,
+) {
+	reg = tools.NewToolRegistry()
+	webSearch = &pluginToolStub{name: "web_search", mark: "from-plugin-web_search"}
+	webFetch = &pluginToolStub{name: "web_fetch", mark: "from-plugin-web_fetch"}
+	messageTool = &pluginToolStub{name: "message", mark: "from-plugin-message"}
+	extra = &pluginToolStub{name: "plugin_extra_tool", mark: "from-plugin-extra"}
+	reg.Register(webSearch)
+	reg.Register(webFetch)
+	reg.Register(messageTool)
+	reg.Register(extra)
+	return reg, webSearch, webFetch, messageTool, extra
+}
+
+func assertAgentUsesToolInstance(t *testing.T, reg *AgentRegistry, agentID string, want tools.Tool) {
+	t.Helper()
+	ag, ok := reg.GetAgent(agentID)
+	if !ok {
+		t.Fatalf("agent %q not found", agentID)
+	}
+	got, ok := ag.Tools.Get(want.Name())
+	if !ok {
+		t.Fatalf("agent %q: tool %q not registered", agentID, want.Name())
+	}
+	if got != want {
+		t.Fatalf("agent %q: tool %q = %T (%p), want plugin stub %p", agentID, want.Name(), got, got, want)
+	}
+}
+
+func testConfigWithWorkspace(t *testing.T, tmp string) *config.Config {
+	t.Helper()
+	cfg := config.DefaultConfig()
+	cfg.Agents.Defaults.Workspace = tmp
+	cfg.Agents.Defaults.Model = "test-model"
+	cfg.Agents.Defaults.MaxTokens = 4096
+	cfg.Agents.Defaults.MaxToolIterations = 10
+	// Defaults already enable web, web_fetch, message — required for skip-shared-tools branch.
+	return cfg
+}
+
 // testHelper executes a message and returns the response
 type testHelper struct {
 	al *AgentLoop
@@ -1171,5 +1235,92 @@ func TestResolveMediaRefs_UsesMetaContentType(t *testing.T) {
 	}
 	if !strings.HasPrefix(result[0].Media[0], "data:image/jpeg;base64,") {
 		t.Fatalf("expected jpeg prefix, got %q", result[0].Media[0][:30])
+	}
+}
+
+// --- NewAgentLoopWithPluginTools: merge + dedupe shared tools (Gateway path) ---
+
+func TestNewAgentLoopWithPluginTools_MergesPluginToolsAndSkipsSharedDuplicates(t *testing.T) {
+	tmp := t.TempDir()
+	cfg := testConfigWithWorkspace(t, tmp)
+	pluginReg, stubWS, stubWF, stubMsg, stubExtra := pluginToolRegistryFixture()
+
+	al := NewAgentLoopWithPluginTools(cfg, bus.NewMessageBus(), &mockProvider{}, pluginReg)
+	reg := al.GetRegistry()
+
+	assertAgentUsesToolInstance(t, reg, "main", stubWS)
+	assertAgentUsesToolInstance(t, reg, "main", stubWF)
+	assertAgentUsesToolInstance(t, reg, "main", stubMsg)
+	assertAgentUsesToolInstance(t, reg, "main", stubExtra)
+
+	if al.pluginToolReg != pluginReg {
+		t.Fatal("expected AgentLoop to retain plugin ToolRegistry reference")
+	}
+}
+
+func TestNewAgentLoopWithPluginTools_BuiltinPathDoesNotUsePluginStubs(t *testing.T) {
+	tmp := t.TempDir()
+	cfg := testConfigWithWorkspace(t, tmp)
+
+	al := NewAgentLoop(cfg, bus.NewMessageBus(), &mockProvider{})
+	reg := al.GetRegistry()
+	ag, ok := reg.GetAgent("main")
+	if !ok {
+		t.Fatal("main agent missing")
+	}
+	got, ok := ag.Tools.Get("web_search")
+	if !ok {
+		t.Fatal("expected built-in web_search when no plugin registry")
+	}
+	if _, isStub := got.(*pluginToolStub); isStub {
+		t.Fatalf("built-in path should not use pluginToolStub, got %T", got)
+	}
+	if al.pluginToolReg != nil {
+		t.Fatal("NewAgentLoop should leave pluginToolReg nil")
+	}
+}
+
+func TestNewAgentLoopWithPluginTools_AllListedAgentsGetPluginTools(t *testing.T) {
+	tmp := t.TempDir()
+	cfg := testConfigWithWorkspace(t, tmp)
+	cfg.Agents.List = []config.AgentConfig{
+		{ID: "alpha", Default: true},
+		{ID: "beta"},
+	}
+
+	pluginReg, stubWS, _, _, stubExtra := pluginToolRegistryFixture()
+	al := NewAgentLoopWithPluginTools(cfg, bus.NewMessageBus(), &mockProvider{}, pluginReg)
+	reg := al.GetRegistry()
+
+	for _, id := range []string{"alpha", "beta"} {
+		assertAgentUsesToolInstance(t, reg, id, stubWS)
+		assertAgentUsesToolInstance(t, reg, id, stubExtra)
+	}
+}
+
+func TestAgentLoop_ReloadProviderAndConfig_ReappliesPluginTools(t *testing.T) {
+	tmp := t.TempDir()
+	cfg := testConfigWithWorkspace(t, tmp)
+	pluginReg, stubWS, stubWF, stubMsg, stubExtra := pluginToolRegistryFixture()
+
+	al := NewAgentLoopWithPluginTools(cfg, bus.NewMessageBus(), &mockProvider{}, pluginReg)
+
+	cfg2 := testConfigWithWorkspace(t, tmp)
+	cfg2.Agents.Defaults.Model = "reloaded-model"
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := al.ReloadProviderAndConfig(ctx, &mockProvider{}, cfg2); err != nil {
+		t.Fatalf("ReloadProviderAndConfig: %v", err)
+	}
+
+	reg := al.GetRegistry()
+	assertAgentUsesToolInstance(t, reg, "main", stubWS)
+	assertAgentUsesToolInstance(t, reg, "main", stubWF)
+	assertAgentUsesToolInstance(t, reg, "main", stubMsg)
+	assertAgentUsesToolInstance(t, reg, "main", stubExtra)
+
+	if got := al.GetConfig().Agents.Defaults.Model; got != "reloaded-model" {
+		t.Fatalf("config not swapped: model=%q", got)
 	}
 }
