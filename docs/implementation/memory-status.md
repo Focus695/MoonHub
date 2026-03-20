@@ -1,5 +1,7 @@
 # 记忆体系 - 实现状态
 
+**源码包**：`pkg/adaptive_memory/` · **仓库文档索引**：[docs/README.md](../README.md)
+
 ## 实现概述
 
 MoonHub 的自适应记忆系统已成功实现，该系统借鉴了 TinyClaw 的设计理念，并对中文进行了特别优化。

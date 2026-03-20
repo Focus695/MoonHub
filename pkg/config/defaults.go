@@ -545,5 +545,6 @@ func DefaultConfig() *Config {
 			BuildTime: BuildTime,
 			GoVersion: GoVersion,
 		},
+		Compactor: DefaultCompactorConfig(),
 	}
 }

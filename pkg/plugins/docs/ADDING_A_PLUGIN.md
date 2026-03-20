@@ -28,4 +28,4 @@
 
 ## 文档
 
-- 更新 [`PLUGIN_INDEX.md`](./PLUGIN_INDEX.md) 与本目录或仓库级 `docs/implementation/plugin-architecture-status.md` 中的清单（若项目要求保持同步）。
+- 更新 [`PLUGIN_INDEX.md`](./PLUGIN_INDEX.md) 与本目录或仓库级 `docs/implementation/plugin-status.md` 中的清单（若项目要求保持同步）。

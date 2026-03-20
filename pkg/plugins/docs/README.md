@@ -8,7 +8,7 @@
 2. [PLUGIN_INDEX.md](./PLUGIN_INDEX.md) — 当前内置插件清单与路径  
 3. [ADDING_A_PLUGIN.md](./ADDING_A_PLUGIN.md) — 新增或复制一类插件时的步骤  
 
-设计决策、阶段完成情况：[`docs/implementation/plugin-architecture-status.md`](../../../docs/implementation/plugin-architecture-status.md)。
+设计决策、阶段完成情况：[`docs/implementation/plugin-status.md`](../../../docs/implementation/plugin-status.md)。
 
 ## 目录布局
 

@@ -8,7 +8,7 @@
 2. [ARCHITECTURE.md](./ARCHITECTURE.md) — 接口、Registry、Manager、初始化顺序
 3. [INTEGRATION.md](./INTEGRATION.md) — 与 Gateway、channels、providers、agent 如何对接
 
-实现状态与阶段说明见仓库级文档：`[docs/implementation/plugin-architecture-status.md](../../../docs/implementation/plugin-architecture-status.md)`。
+实现状态与阶段说明见仓库级文档：`[docs/implementation/plugin-status.md](../../../docs/implementation/plugin-status.md)`。
 
 ## 包名与导入（常见困惑）
 

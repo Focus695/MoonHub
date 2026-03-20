@@ -5,6 +5,8 @@
 >
 > 本项目基于 [TinyClaw](https://github.com/wgtechlabs/tinyclaw) 的诸多特性与 [PicoClaw](https://github.com/sipeed/picoclaw) 的轻量化设计融合更改，并将在本项目上发展独有功能。本项目遵循 GPL-3.0 许可证。
 
+**文档索引与阅读顺序**（插件 / 学习 / 压缩器 / 记忆等）：[`docs/README.md`](docs/README.md)。
+
 ## Features
 
 ### Implemented
@@ -12,18 +14,34 @@
 - **Adaptive Memory** — 3-layer memory system (episodic, semantic FTS5, temporal decay) that learns what to remember and forget over time.
 - **Self-Improving** — Behavioral pattern detection system that learns from user feedback, tracks tool usage preferences, and evolves patterns over time.
 - **Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.
+- **Context Compactor** — 4-layer context compaction pipeline (rules, dedup, LLM summary, L0/L1/L2 tiers) integrated in the agent loop; see [`docs/implementation/compactor-status.md`](docs/implementation/compactor-status.md) and [`pkg/compactor/docs/`](pkg/compactor/docs/README.md).
 
 ### Planned
 
 - ~~**Self-Improving** — Behavioral pattern detection that makes the agent better with every interaction. It grows with you.~~ → **Implemented**
 - ~~**Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.~~ → **Implemented**
+- ~~**Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.~~ → **Implemented**
 - **Smart Routing** — 8-dimension query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.
-- **Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.
 - **SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.
 - **Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.
 - **Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.
 
 ## Changelog
+
+<details>
+<summary><strong>2026-03-20 — Context Compactor &amp; documentation flow</strong></summary>
+
+#### Features
+
+- **Context Compactor** (`pkg/compactor/`) — 四层管道（规则预压缩、去重、LLM 摘要、L0/L1/L2 分层）已接入 Agent；配置见 `compactor` 与 [`pkg/compactor/docs/CONFIG.md`](pkg/compactor/docs/CONFIG.md)。
+
+#### Documentation
+
+- 新增仓库文档入口 [`docs/README.md`](docs/README.md)，与 `pkg/learning/docs` 一致区分「包内 docs」与 `docs/implementation/*-status.md`。
+- 新增 [`pkg/compactor/docs/`](pkg/compactor/docs/README.md)（README + CONFIG）。
+- 修正指向 `plugin-architecture-status.md` 的链接为实际文件 [`docs/implementation/plugin-status.md`](docs/implementation/plugin-status.md)。
+
+</details>
 
 <details>
 <summary><strong>2025-03-20 — Plugin Architecture Implementation</strong></summary>
@@ -61,7 +79,7 @@ A comprehensive plugin system that makes channels, providers, and tools all exte
 - `pkg/channels/manager.go` — Plugin-based channel initialization
 - `pkg/providers/factory_provider.go` — Plugin resolver support
 - `pkg/tools/registry.go` — MergeFrom method
-- `docs/implementation/plugin-architecture-status.md` — Implementation status
+- `docs/implementation/plugin-status.md` — Implementation status
 
 </details>
 

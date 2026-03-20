@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/sipeed/moonhub/pkg/compactor"
 	"github.com/sipeed/moonhub/pkg/config"
 	"github.com/sipeed/moonhub/pkg/memory"
 	"github.com/sipeed/moonhub/pkg/providers"
@@ -47,6 +48,14 @@ type AgentInstance struct {
 	// LightCandidates holds the resolved provider candidates for the light model.
 	// Pre-computed at agent creation to avoid repeated model_list lookups at runtime.
 	LightCandidates []providers.FallbackCandidate
+
+	// Compactor is the 4-layer context compaction engine for managing conversation history.
+	// When enabled, it replaces the legacy summarization with tiered summaries.
+	Compactor compactor.CompactorEngine
+
+	// CompactorTriggerTokenPercent is the token-usage threshold (percent of ContextWindow) at which
+	// async compaction runs when the compactor is enabled. Sourced from config compactor.trigger_token_percent.
+	CompactorTriggerTokenPercent int
 }
 
 // NewAgentInstance creates an agent instance from config.
@@ -214,28 +223,68 @@ func NewAgentInstance(
 		}
 	}
 
+	triggerPct := cfg.Compactor.TriggerTokenPercent
+	if triggerPct <= 0 {
+		triggerPct = 70
+	}
+	if triggerPct > 95 {
+		triggerPct = 95
+	}
+
+	// Initialize compactor if enabled
+	var compactorEngine compactor.CompactorEngine
+	if cfg.Compactor.Enabled && provider != nil {
+		compactorCfg := compactor.Config{
+			Enabled:             cfg.Compactor.Enabled,
+			DBPath:              filepath.Join(workspace, "compactor.db"),
+			TriggerTokenPercent: cfg.Compactor.TriggerTokenPercent,
+			KeepRecent:          cfg.Compactor.KeepRecent,
+			TierBudgets: compactor.TierBudgets{
+				L0: cfg.Compactor.TierBudgets.L0,
+				L1: cfg.Compactor.TierBudgets.L1,
+				L2: cfg.Compactor.TierBudgets.L2,
+			},
+			DedupEnabled:             cfg.Compactor.DedupEnabled,
+			DedupSimilarityThreshold: cfg.Compactor.DedupSimilarityThreshold,
+			StripEmoji:               cfg.Compactor.StripEmoji,
+			RemoveDuplicateLines:     cfg.Compactor.RemoveDuplicateLines,
+			NormalizeCJK:             cfg.Compactor.NormalizeCJK,
+			SmartRuleSelection:       cfg.Compactor.SmartRuleSelection,
+			ParallelProcessing:       cfg.Compactor.ParallelProcessing,
+			IncrementalCompaction:    cfg.Compactor.IncrementalCompaction,
+			SummarizationModel:       cfg.Compactor.SummarizationModel,
+		}
+		var compactorErr error
+		compactorEngine, compactorErr = compactor.New(compactorCfg, provider)
+		if compactorErr != nil {
+			log.Printf("compactor: initialization failed: %v; using legacy summarization", compactorErr)
+		}
+	}
+
 	return &AgentInstance{
-		ID:                        agentID,
-		Name:                      agentName,
-		Model:                     model,
-		Fallbacks:                 fallbacks,
-		Workspace:                 workspace,
-		MaxIterations:             maxIter,
-		MaxTokens:                 maxTokens,
-		Temperature:               temperature,
-		ThinkingLevel:             thinkingLevel,
-		ContextWindow:             maxTokens,
-		SummarizeMessageThreshold: summarizeMessageThreshold,
-		SummarizeTokenPercent:     summarizeTokenPercent,
-		Provider:                  provider,
-		Sessions:                  sessions,
-		ContextBuilder:            contextBuilder,
-		Tools:                     toolsRegistry,
-		Subagents:                 subagents,
-		SkillsFilter:              skillsFilter,
-		Candidates:                candidates,
-		Router:                    router,
-		LightCandidates:           lightCandidates,
+		ID:                           agentID,
+		Name:                         agentName,
+		Model:                        model,
+		Fallbacks:                    fallbacks,
+		Workspace:                    workspace,
+		MaxIterations:                maxIter,
+		MaxTokens:                    maxTokens,
+		Temperature:                  temperature,
+		ThinkingLevel:                thinkingLevel,
+		ContextWindow:                maxTokens,
+		SummarizeMessageThreshold:    summarizeMessageThreshold,
+		SummarizeTokenPercent:        summarizeTokenPercent,
+		Provider:                     provider,
+		Sessions:                     sessions,
+		ContextBuilder:               contextBuilder,
+		Tools:                        toolsRegistry,
+		Subagents:                    subagents,
+		SkillsFilter:                 skillsFilter,
+		Candidates:                   candidates,
+		Router:                       router,
+		LightCandidates:              lightCandidates,
+		Compactor:                    compactorEngine,
+		CompactorTriggerTokenPercent: triggerPct,
 	}
 }
 
@@ -282,10 +331,24 @@ func compilePatterns(patterns []string) []*regexp.Regexp {
 	return compiled
 }
 
-// Close releases resources held by the agent's session store.
+// Close releases resources held by the agent's session store and compactor.
 func (a *AgentInstance) Close() error {
+	var errs []error
+
 	if a.Sessions != nil {
-		return a.Sessions.Close()
+		if err := a.Sessions.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if a.Compactor != nil {
+		if err := a.Compactor.Close(); err != nil {
+			errs = append(errs, err)
+		}
+	}
+
+	if len(errs) > 0 {
+		return fmt.Errorf("close errors: %v", errs)
 	}
 	return nil
 }

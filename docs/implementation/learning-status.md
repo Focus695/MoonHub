@@ -1,5 +1,7 @@
 # Self-Improving Behavioral Pattern Detection 实现状态
 
+**包内文档**：[pkg/learning/docs/README.md](../../pkg/learning/docs/README.md) · **仓库文档索引**：[docs/README.md](../README.md)
+
 **目标平台**: MoonHub (Go)
 **集成方式**: 与现有 Memory 系统深度集成
 **实现策略**: 全部并行推进

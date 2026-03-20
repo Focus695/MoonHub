@@ -87,6 +87,7 @@ type Config struct {
 	Devices        DevicesConfig        `json:"devices"`
 	Voice          VoiceConfig          `json:"voice"`
 	AdaptiveMemory AdaptiveMemoryConfig `json:"adaptive_memory,omitempty"` // Adaptive memory system configuration
+	Compactor      CompactorConfig      `json:"compactor,omitempty"`      // Context compactor configuration
 	// BuildInfo contains build-time version information
 	BuildInfo BuildInfo `json:"build_info,omitempty"`
 }
@@ -118,6 +119,48 @@ func DefaultAdaptiveMemoryConfig() AdaptiveMemoryConfig {
 		PruneAccessCountMax:      0,
 		PruneOlderThanDays:       30,
 		MergeSimilarityThreshold: 0.8,
+	}
+}
+
+// CompactorConfig configures the 4-layer context compactor system
+type CompactorConfig struct {
+	Enabled                 bool                `json:"enabled"                     env:"MOONHUB_COMPACTOR_ENABLED"`
+	TriggerTokenPercent     int                 `json:"trigger_token_percent"       env:"MOONHUB_COMPACTOR_TRIGGER_TOKEN_PERCENT"`
+	KeepRecent              int                 `json:"keep_recent"                 env:"MOONHUB_COMPACTOR_KEEP_RECENT"`
+	TierBudgets             TierBudgetsConfig   `json:"tier_budgets"`
+	DedupEnabled            bool                `json:"dedup_enabled"               env:"MOONHUB_COMPACTOR_DEDUP_ENABLED"`
+	DedupSimilarityThreshold float64             `json:"dedup_similarity_threshold"  env:"MOONHUB_COMPACTOR_DEDUP_SIMILARITY_THRESHOLD"`
+	StripEmoji              bool                `json:"strip_emoji"                 env:"MOONHUB_COMPACTOR_STRIP_EMOJI"`
+	RemoveDuplicateLines    bool                `json:"remove_duplicate_lines"      env:"MOONHUB_COMPACTOR_REMOVE_DUPLICATE_LINES"`
+	NormalizeCJK            bool                `json:"normalize_cjk"               env:"MOONHUB_COMPACTOR_NORMALIZE_CJK"`
+	SmartRuleSelection      bool                `json:"smart_rule_selection"        env:"MOONHUB_COMPACTOR_SMART_RULE_SELECTION"`
+	ParallelProcessing      bool                `json:"parallel_processing"         env:"MOONHUB_COMPACTOR_PARALLEL_PROCESSING"`
+	IncrementalCompaction   bool                `json:"incremental_compaction"      env:"MOONHUB_COMPACTOR_INCREMENTAL_COMPACTION"`
+	SummarizationModel      string              `json:"summarization_model"         env:"MOONHUB_COMPACTOR_SUMMARIZATION_MODEL"`
+}
+
+// TierBudgetsConfig holds token budgets for each tier
+type TierBudgetsConfig struct {
+	L0 int `json:"l0"` // Ultra-compact (default: 200 tokens)
+	L1 int `json:"l1"` // Working memory (default: 1000 tokens)
+	L2 int `json:"l2"` // Full context (default: 3000 tokens)
+}
+
+// DefaultCompactorConfig returns the default compactor configuration
+func DefaultCompactorConfig() CompactorConfig {
+	return CompactorConfig{
+		Enabled:                  true,
+		TriggerTokenPercent:      70,
+		KeepRecent:               10,
+		TierBudgets:              TierBudgetsConfig{L0: 200, L1: 1000, L2: 3000},
+		DedupEnabled:             true,
+		DedupSimilarityThreshold: 0.6,
+		StripEmoji:               true,
+		RemoveDuplicateLines:     true,
+		NormalizeCJK:             true,
+		SmartRuleSelection:       true,
+		ParallelProcessing:       true,
+		IncrementalCompaction:    true,
 	}
 }
 

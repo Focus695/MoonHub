@@ -1,5 +1,7 @@
 # 插件架构 - 实现状态
 
+**包内文档**：[pkg/framework/docs/README.md](../../pkg/framework/docs/README.md) · [pkg/plugins/docs/README.md](../../pkg/plugins/docs/README.md) · **仓库文档索引**：[docs/README.md](../README.md)
+
 ## 实现概述
 
 MoonHub 正在实现一个完整的插件架构，借鉴 TinyClaw 的设计理念。目标是让 channels、providers 和 tools 都成为可扩展的插件，保持核心精简。

@@ -22,6 +22,7 @@ import (
 	"github.com/sipeed/moonhub/pkg/bus"
 	"github.com/sipeed/moonhub/pkg/channels"
 	"github.com/sipeed/moonhub/pkg/commands"
+	"github.com/sipeed/moonhub/pkg/compactor"
 	"github.com/sipeed/moonhub/pkg/config"
 	"github.com/sipeed/moonhub/pkg/constants"
 	"github.com/sipeed/moonhub/pkg/learning"
@@ -128,9 +129,9 @@ func NewAgentLoopWithPluginTools(
 		registry:      registry,
 		state:         stateManager,
 		pluginToolReg: pluginToolReg,
-		summarizing: sync.Map{},
-		fallback:    fallbackChain,
-		cmdRegistry: commands.NewRegistry(commands.BuiltinDefinitions()),
+		summarizing:   sync.Map{},
+		fallback:      fallbackChain,
+		cmdRegistry:   commands.NewRegistry(commands.BuiltinDefinitions()),
 	}
 
 	return al
@@ -927,6 +928,11 @@ func (al *AgentLoop) runAgentLoop(
 	if !opts.NoHistory {
 		history = agent.Sessions.GetHistory(opts.SessionKey)
 		summary = agent.Sessions.GetSummary(opts.SessionKey)
+
+		// Try to get tiered summary from compactor if available
+		if agent.Compactor != nil && summary == "" {
+			summary = al.getTieredSummary(ctx, agent, opts.SessionKey, len(history))
+		}
 	}
 	messages := agent.ContextBuilder.BuildMessages(
 		history,
@@ -1209,6 +1215,12 @@ func (al *AgentLoop) runLLMIteration(
 				al.forceCompression(agent, opts.SessionKey)
 				newHistory := agent.Sessions.GetHistory(opts.SessionKey)
 				newSummary := agent.Sessions.GetSummary(opts.SessionKey)
+
+				// Try to get tiered summary from compactor if available
+				if agent.Compactor != nil && newSummary == "" {
+					newSummary = al.getTieredSummary(ctx, agent, opts.SessionKey, len(newHistory))
+				}
+
 				messages = agent.ContextBuilder.BuildMessages(
 					newHistory, newSummary, "",
 					nil, opts.Channel, opts.ChatID,
@@ -1515,7 +1527,15 @@ func (al *AgentLoop) selectCandidates(
 }
 
 // maybeSummarize triggers summarization if the session history exceeds thresholds.
+// When compactor is enabled, it uses the 4-layer compaction pipeline instead of legacy summarization.
 func (al *AgentLoop) maybeSummarize(agent *AgentInstance, sessionKey, channel, chatID string) {
+	// Use compactor if available
+	if agent.Compactor != nil {
+		al.maybeCompact(agent, sessionKey, channel, chatID)
+		return
+	}
+
+	// Legacy summarization path
 	newHistory := agent.Sessions.GetHistory(sessionKey)
 	tokenEstimate := al.estimateTokens(newHistory)
 	threshold := agent.ContextWindow * agent.SummarizeTokenPercent / 100
@@ -1532,9 +1552,70 @@ func (al *AgentLoop) maybeSummarize(agent *AgentInstance, sessionKey, channel, c
 	}
 }
 
+// maybeCompact runs the 4-layer compaction pipeline if thresholds are exceeded.
+func (al *AgentLoop) maybeCompact(agent *AgentInstance, sessionKey, channel, chatID string) {
+	history := agent.Sessions.GetHistory(sessionKey)
+	tokenEstimate := agent.Compactor.EstimateTokensFromMessages(history)
+	threshold := int(float64(agent.ContextWindow) * float64(agent.CompactorTriggerTokenPercent) / 100)
+
+	if tokenEstimate > threshold {
+		summarizeKey := agent.ID + ":" + sessionKey
+		if _, loading := al.summarizing.LoadOrStore(summarizeKey, true); !loading {
+			go func() {
+				defer al.summarizing.Delete(summarizeKey)
+
+				ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+				defer cancel()
+
+				history := agent.Sessions.GetHistory(sessionKey)
+
+				result, err := agent.Compactor.CompactIfNeeded(ctx, sessionKey, history, agent.ContextWindow)
+				if err != nil {
+					logger.ErrorCF("compactor", "Compaction failed", map[string]any{"error": err.Error()})
+					return
+				}
+
+				if result != nil {
+					// Update session with compacted history
+					// Keep the recent messages as specified by compactor config
+					if result.MessagesKept > 0 && result.MessagesKept < len(history) {
+						keptHistory := history[len(history)-result.MessagesKept:]
+						agent.Sessions.SetHistory(sessionKey, keptHistory)
+					}
+
+					// Store the L2 summary
+					if result.Summary.L2 != "" {
+						agent.Sessions.SetSummary(sessionKey, result.Summary.L2)
+					}
+
+					agent.Sessions.Save(sessionKey)
+
+					logger.InfoCF("compactor", "Compaction completed", map[string]any{
+						"session_key":       sessionKey,
+						"messages_before":   result.Metrics.MessagesBefore,
+						"messages_kept":     result.MessagesKept,
+						"tokens_before":     result.Metrics.TokensBefore,
+						"tokens_after":      result.Metrics.TokensAfter,
+						"compression_ratio": result.Metrics.CompressionRatio,
+						"duration_ms":       result.Metrics.DurationMs,
+					})
+				}
+			}()
+		}
+	}
+}
+
 // forceCompression aggressively reduces context when the limit is hit.
-// It drops the oldest 50% of messages (keeping system prompt and last user message).
+// When compactor is enabled, it uses the 4-layer compaction pipeline.
+// Otherwise, it drops the oldest 50% of messages (keeping system prompt and last user message).
 func (al *AgentLoop) forceCompression(agent *AgentInstance, sessionKey string) {
+	// Use compactor if available
+	if agent.Compactor != nil {
+		al.forceCompact(agent, sessionKey)
+		return
+	}
+
+	// Legacy compression path
 	history := agent.Sessions.GetHistory(sessionKey)
 	if len(history) <= 4 {
 		return
@@ -1579,6 +1660,86 @@ func (al *AgentLoop) forceCompression(agent *AgentInstance, sessionKey string) {
 	agent.Sessions.Save(sessionKey)
 
 	logger.WarnCF("agent", "Forced compression executed", map[string]any{
+		"session_key":  sessionKey,
+		"dropped_msgs": droppedCount,
+		"new_count":    len(newHistory),
+	})
+}
+
+// forceCompact runs the compactor pipeline immediately regardless of threshold.
+func (al *AgentLoop) forceCompact(agent *AgentInstance, sessionKey string) {
+	history := agent.Sessions.GetHistory(sessionKey)
+	if len(history) <= 4 {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 120*time.Second)
+	defer cancel()
+
+	result, err := agent.Compactor.ForceCompact(ctx, sessionKey, history)
+	if err != nil {
+		logger.ErrorCF("compactor", "Force compaction failed", map[string]any{"error": err.Error()})
+		// Fall back to legacy compression
+		al.legacyForceCompression(agent, sessionKey)
+		return
+	}
+
+	if result != nil {
+		// Update session with compacted history
+		if result.MessagesKept > 0 && result.MessagesKept < len(history) {
+			keptHistory := history[len(history)-result.MessagesKept:]
+			agent.Sessions.SetHistory(sessionKey, keptHistory)
+		}
+
+		// Store the L2 summary
+		if result.Summary.L2 != "" {
+			agent.Sessions.SetSummary(sessionKey, result.Summary.L2)
+		}
+
+		agent.Sessions.Save(sessionKey)
+
+		logger.WarnCF("compactor", "Force compaction executed", map[string]any{
+			"session_key":     sessionKey,
+			"messages_before": result.Metrics.MessagesBefore,
+			"messages_kept":   result.MessagesKept,
+			"compression":     result.Metrics.CompressionRatio,
+		})
+	}
+}
+
+// legacyForceCompression is the original 50% drop compression logic.
+func (al *AgentLoop) legacyForceCompression(agent *AgentInstance, sessionKey string) {
+	history := agent.Sessions.GetHistory(sessionKey)
+	if len(history) <= 4 {
+		return
+	}
+
+	conversation := history[1 : len(history)-1]
+	if len(conversation) == 0 {
+		return
+	}
+
+	mid := len(conversation) / 2
+	droppedCount := mid
+	keptConversation := conversation[mid:]
+
+	newHistory := make([]providers.Message, 0, 1+len(keptConversation)+1)
+
+	compressionNote := fmt.Sprintf(
+		"\n\n[System Note: Emergency compression dropped %d oldest messages due to context limit]",
+		droppedCount,
+	)
+	enhancedSystemPrompt := history[0]
+	enhancedSystemPrompt.Content = enhancedSystemPrompt.Content + compressionNote
+	newHistory = append(newHistory, enhancedSystemPrompt)
+
+	newHistory = append(newHistory, keptConversation...)
+	newHistory = append(newHistory, history[len(history)-1])
+
+	agent.Sessions.SetHistory(sessionKey, newHistory)
+	agent.Sessions.Save(sessionKey)
+
+	logger.WarnCF("agent", "Legacy forced compression executed", map[string]any{
 		"session_key":  sessionKey,
 		"dropped_msgs": droppedCount,
 		"new_count":    len(newHistory),
@@ -1886,6 +2047,29 @@ func (al *AgentLoop) summarizeBatch(
 		fallback.WriteString(fmt.Sprintf("%s: %s", m.Role, content))
 	}
 	return fallback.String(), nil
+}
+
+// getTieredSummary retrieves the appropriate tier of summary from the compactor.
+// It selects the tier based on context pressure (history length) to optimize token usage.
+func (al *AgentLoop) getTieredSummary(ctx context.Context, agent *AgentInstance, sessionKey string, historyLen int) string {
+	if agent.Compactor == nil {
+		return ""
+	}
+
+	tier := compactor.SelectTier(historyLen)
+
+	tieredSummary, err := agent.Compactor.GetTieredSummary(ctx, sessionKey)
+	if err != nil {
+		logger.DebugCF("compactor", "Failed to get tiered summary",
+			map[string]any{"error": err.Error(), "session_key": sessionKey, "tier": tier})
+		return ""
+	}
+
+	if tieredSummary == nil {
+		return ""
+	}
+
+	return tieredSummary.GetTier(tier)
 }
 
 // estimateTokens estimates the number of tokens in a message list.
