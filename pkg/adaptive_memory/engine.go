@@ -7,6 +7,7 @@ package adaptive_memory
 import (
 	"context"
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/google/uuid"
@@ -48,6 +49,30 @@ func NewMemoryEngine(config Config) (*Engine, error) {
 		consolidator: consolidator,
 		config:       config,
 	}, nil
+}
+
+// searchStoreLimit chooses how many FTS rows to fetch before hybrid re-ranking.
+// Pulling FTSMaxResults on every query is wasteful when the caller only needs a small top-K;
+// we oversample modestly so temporal/importance scoring can reorder within the candidate set.
+func searchStoreLimit(requested, ftsCap int) int {
+	if ftsCap <= 0 {
+		return requested
+	}
+	if requested <= 0 {
+		return ftsCap
+	}
+	n := requested * 4
+	if n < requested+16 {
+		n = requested + 16
+	}
+	if n > ftsCap {
+		n = ftsCap
+	}
+	// Ensure at least `requested` candidates when the cap allows (for small top-K).
+	if n < requested && requested <= ftsCap {
+		n = requested
+	}
+	return n
 }
 
 // RecordEvent stores a new episodic memory event
@@ -103,8 +128,8 @@ func (e *Engine) Search(userID, query string, limit int) ([]MemorySearchResult, 
 	// Segment query for Chinese
 	queryTokens := e.segmenter.SmartSegment(query)
 
-	// Search in both content and content_tokens
-	records, err := e.store.Search(context.Background(), userID, queryTokens, e.config.FTSMaxResults)
+	storeLimit := searchStoreLimit(limit, e.config.FTSMaxResults)
+	records, err := e.store.Search(context.Background(), userID, queryTokens, storeLimit)
 	if err != nil {
 		return nil, fmt.Errorf("search failed: %w", err)
 	}
@@ -114,41 +139,33 @@ func (e *Engine) Search(userID, query string, limit int) ([]MemorySearchResult, 
 	}
 
 	now := NowMs()
-	results := make([]MemorySearchResult, 0, len(records))
 
-	// Find max absolute FTS rank for normalization
+	// Find max FTS rank for normalization (Importance holds rank until we build results)
 	maxAbsRank := 0.0
-	for _, record := range records {
-		absRank := record.Importance // Using Importance field temporarily for FTS rank
-		if absRank > maxAbsRank {
-			maxAbsRank = absRank
+	for i := range records {
+		if r := records[i].Importance; r > maxAbsRank {
+			maxAbsRank = r
 		}
 	}
 
-	// Calculate relevance scores
-	for _, record := range records {
-		// Compute temporal score
+	results := make([]MemorySearchResult, len(records))
+	for i := range records {
+		record := &records[i]
 		temporalScore := ComputeTemporalScore(record.LastAccessedAt, int64(record.AccessCount), now)
-
-		// Normalize FTS rank (stored in Importance temporarily)
 		ftsRank := NormalizeFTSRank(record.Importance, maxAbsRank)
-
-		// Get actual importance (reset from temporary field)
 		actualImportance := GetDefaultImportance(record.EventType)
-
-		// Compute final relevance score
 		relevance := ComputeRelevanceScore(ftsRank, temporalScore, actualImportance)
-
-		results = append(results, MemorySearchResult{
+		results[i] = MemorySearchResult{
 			ID:             record.ID,
 			Content:        record.Content,
 			RelevanceScore: relevance,
 			Source:         "episodic",
-		})
+		}
 	}
 
-	// Sort by relevance score
-	sortResultsByRelevance(results)
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].RelevanceScore > results[j].RelevanceScore
+	})
 
 	// Limit results
 	if len(results) > limit {
@@ -255,11 +272,7 @@ func (e *Engine) Close() error {
 
 // sortResultsByRelevance sorts results by relevance score in descending order
 func sortResultsByRelevance(results []MemorySearchResult) {
-	for i := 0; i < len(results)-1; i++ {
-		for j := i + 1; j < len(results); j++ {
-			if results[j].RelevanceScore > results[i].RelevanceScore {
-				results[i], results[j] = results[j], results[i]
-			}
-		}
-	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].RelevanceScore > results[j].RelevanceScore
+	})
 }

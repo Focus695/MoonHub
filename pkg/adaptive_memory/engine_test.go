@@ -319,3 +319,20 @@ func TestMemoryEngine_NewEventTypes(t *testing.T) {
 		t.Errorf("Expected importance 0.5 for context_update, got %f", record.Importance)
 	}
 }
+
+func TestSearchStoreLimit(t *testing.T) {
+	tests := []struct {
+		requested, ftsCap, want int
+	}{
+		{10, 50, 40},  // 4*10 >= 10+16 → 40
+		{5, 50, 21},   // 4*5 < 5+16 → 21
+		{50, 50, 50},  // capped at ftsCap
+		{100, 50, 50}, // cannot fetch more than ftsCap
+		{1, 50, 17},   // 4 < 1+16 → 17
+	}
+	for _, tt := range tests {
+		if got := searchStoreLimit(tt.requested, tt.ftsCap); got != tt.want {
+			t.Errorf("searchStoreLimit(%d,%d) = %d, want %d", tt.requested, tt.ftsCap, got, tt.want)
+		}
+	}
+}
