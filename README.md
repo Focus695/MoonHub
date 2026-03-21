@@ -18,6 +18,7 @@
 - **SHIELD.md Anti-Malware** — Runtime threat evaluation engine with YAML threat parsing, pattern matching, approval workflow, and 8 built-in threats; see [`docs/implementation/shield-status.md`](docs/implementation/shield-status.md) and [`pkg/shield/docs/`](pkg/shield/docs/README.md).
 - **Delegation System** — Sub-agent orchestration (non-blocking and background tasks, template reuse, adaptive timeouts, SQLite persistence, Intercom pub/sub). Opt-in via `delegation.enabled` in `config.json` (default off); see [`pkg/delegation/docs/README.md`](pkg/delegation/docs/README.md), [`pkg/delegation/docs/CONFIG.md`](pkg/delegation/docs/CONFIG.md), and [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md).
 - **Inter-Agent Comms (Intercom)** — In-process pub/sub for delegation-time signals: subscribe per topic (`On`), catch-all via `OnAny`, bounded per-topic retention with `Recent` / `RecentAll`. TinyClaw-compatible topic constants; see [`pkg/delegation/intercom.go`](pkg/delegation/intercom.go) and the Intercom section in [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md).
+- **Smart Router V2** — 4-tier model routing system (simple/moderate/complex/reasoning) with rule-based scoring, feature extraction, and privacy-safe metrics. Routes simple queries to cheap models and complex ones to powerful models; see [`pkg/routing/docs/README.md`](pkg/routing/docs/README.md) and [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md).
 
 ### Planned
 
@@ -26,10 +27,59 @@
 - ~~**Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.~~ → **Implemented**
 - ~~**SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.~~ → **Implemented**
 - ~~**Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.~~ → **Implemented** (opt-in; see [`pkg/delegation/docs/`](pkg/delegation/docs/README.md) and [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md))
-- **Smart Routing** — 8-dimension query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.
+- ~~**Smart Routing** — 4-tier query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.~~ → **Implemented** (see [`pkg/routing/docs/`](pkg/routing/docs/README.md) and [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md))
 - ~~**Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.~~ → **Implemented** (delegation **Intercom** in [`pkg/delegation/intercom.go`](pkg/delegation/intercom.go); enabled with delegation)
 
 ## Changelog
+
+<details>
+<summary><strong>2026-03-21 — Smart Router V2 (4-Tier Model Routing)</strong></summary>
+
+#### Summary
+
+4-tier model routing system (TinyClaw-style) with rule-based classification, replacing the original 2-tier (light/heavy) system. Automatically selects the appropriate LLM based on message complexity.
+
+#### New Features
+
+**Smart Router V2** (`pkg/routing/`)
+- **4-Tier Classification** — simple, moderate, complex, reasoning tiers with configurable boundaries
+- **Rule-Based Scoring** — Sub-microsecond classification using structural features (no API calls)
+- **Feature Extraction** — Token estimate, code blocks, tool calls, conversation depth, attachments
+- **Attachment Hard Gate** — Multi-modal inputs automatically route to reasoning tier
+- **Confidence Scoring** — Sigmoid-based confidence calculation for each classification
+- **Signal Tracing** — Every decision includes explainable signals for debugging
+- **Privacy-Safe Metrics** — Aggregate statistics without storing message content
+- **Decision Recorder** — Ring buffer for recent decisions with tier filtering
+- **HTTP Endpoints** — `/metrics`, `/routing/decisions`, `/routing/stats`
+- **Backward Compatible** — Falls back to 2-tier mode when `light_model` is configured
+
+#### Documentation
+
+- [`pkg/routing/docs/README.md`](pkg/routing/docs/README.md) — Overview, architecture, quick start
+- [`pkg/routing/docs/CONFIG.md`](pkg/routing/docs/CONFIG.md) — Configuration options, tier mapping, custom boundaries
+- [`pkg/routing/docs/FEATURES.md`](pkg/routing/docs/FEATURES.md) — Feature extraction, scoring weights, examples
+- [`pkg/routing/docs/METRICS.md`](pkg/routing/docs/METRICS.md) — Metrics collection, decision recorder, HTTP endpoints
+- [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md) — Full implementation status
+- [`docs/README.md`](docs/README.md) — Repository documentation index (updated)
+
+#### Technical Details
+
+- Score range: [-1.0, 1.0] with negative scores for simple messages
+- Default boundaries: simple [-1, -0.05), moderate [-0.05, 0.15), complex [0.15, 0.35), reasoning [0.35, 1.0]
+- Weights: short message (-0.10), code block (+0.40), long message (+0.35), attachment (1.0 hard gate)
+- 42 unit tests, all passing
+
+#### Files Changed
+
+- `pkg/routing/` — Core implementation (tier, classifier, router, features, metrics, recorder)
+- `pkg/routing/docs/` — New documentation directory (README, CONFIG, FEATURES, METRICS)
+- `pkg/config/config.go` — RoutingConfig with TierMapping and TierBoundariesConfig
+- `pkg/agent/instance.go` — RouterV2, TierCandidates fields and initialization
+- `pkg/agent/loop.go` — Updated selectCandidates for 4-tier routing
+- `pkg/health/server.go` — HTTP endpoints for metrics and decisions
+- `docs/README.md` — Updated Smart Router section with full documentation links
+
+</details>
 
 <details>
 <summary><strong>2026-03-21 — Delegation System (sub-agent orchestration)</strong></summary>

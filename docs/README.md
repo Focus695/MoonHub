@@ -5,9 +5,10 @@ This page is the **entry point and reading guide** for the repository documentat
 ## Recommended Reading Order (First Time)
 
 1. [Repository Root README](../README.md) — Feature overview, license, and recent changelog summary
-2. [Troubleshooting](./troubleshooting.md), [Debug Guide](./debug.md) — Runtime issues reference
-3. [Tools & Capabilities Configuration](./tools_configuration.md) — Tool-side configuration (`tools.*` in `config.json`)
-4. If you enable **sub-agent delegation** (`delegation.enabled`): [pkg/delegation/docs/README.md](../pkg/delegation/docs/README.md) → [CONFIG.md](../pkg/delegation/docs/CONFIG.md) → [implementation status](./implementation/delegation-status.md)
+2. [CLAUDE.md](../CLAUDE.md) — Project architecture, build commands, and development guidelines for Claude Code
+3. [Troubleshooting](./troubleshooting.md), [Debug Guide](./debug.md) — Runtime issues reference
+4. [Tools & Capabilities Configuration](./tools_configuration.md) — Tool-side configuration (`tools.*` in `config.json`)
+5. If you enable **sub-agent delegation** (`delegation.enabled`): [pkg/delegation/docs/README.md](../pkg/delegation/docs/README.md) → [CONFIG.md](../pkg/delegation/docs/CONFIG.md) → [implementation status](./implementation/delegation-status.md)
 
 ## Documentation Flow by Subsystem
 
@@ -64,9 +65,25 @@ This page is the **entry point and reading guide** for the repository documentat
 | 2 | [`pkg/delegation/docs/CONFIG.md`](../pkg/delegation/docs/CONFIG.md) | `delegation` in `config.json` and environment variables |
 | Status | [`docs/implementation/delegation-status.md`](./implementation/delegation-status.md) | Schema, eight tools, Intercom topics, examples, tests |
 
+### Smart Router (4-Tier Model Routing)
+
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/routing/docs/README.md`](../pkg/routing/docs/README.md) | Overview, architecture, quick start, and 4-tier system |
+| 2 | [`pkg/routing/docs/CONFIG.md`](../pkg/routing/docs/CONFIG.md) | Configuration options, tier mapping, custom boundaries |
+| 3 | [`pkg/routing/docs/FEATURES.md`](../pkg/routing/docs/FEATURES.md) | Feature extraction, scoring weights, examples |
+| 4 | [`pkg/routing/docs/METRICS.md`](../pkg/routing/docs/METRICS.md) | Metrics collection, decision recorder, HTTP endpoints |
+| Status | [`docs/implementation/routing-status.md`](./implementation/routing-status.md) | Full implementation status, integration points, tests |
+
 ### Channels
 
 Channel architecture, migration, and how to implement a channel: [`pkg/channels/README.md`](../pkg/channels/README.md). Per-channel behavior also lives with each plugin under [`pkg/plugins/channels/`](../pkg/plugins/channels/) (see [`pkg/plugins/docs/PLUGIN_INDEX.md`](../pkg/plugins/docs/PLUGIN_INDEX.md)).
+
+### Web Interface
+
+| Document | Description |
+| --- | --- |
+| [`web/README.md`](../web/README.md) | Web interface development (React + Vite frontend, Go backend) |
 
 ---
 
@@ -80,3 +97,164 @@ Channel architecture, migration, and how to implement a channel: [`pkg/channels/
 | [`shield-status.md`](./implementation/shield-status.md) | SHIELD runtime security implementation status |
 | [`memory-status.md`](./implementation/memory-status.md) | Memory system implementation status |
 | [`delegation-status.md`](./implementation/delegation-status.md) | Sub-agent delegation orchestration implementation status |
+| [`routing-status.md`](./implementation/routing-status.md) | Smart Router V2 (4-tier routing) implementation status |
+
+---
+
+## `docs/channels/` Overview
+
+Per-channel specific documentation:
+
+| Directory | Channel |
+| --- | --- |
+| [`telegram/`](./channels/telegram/) | Telegram channel documentation |
+| [`discord/`](./channels/discord/) | Discord channel documentation |
+| [`slack/`](./channels/slack/) | Slack channel documentation |
+| [`matrix/`](./channels/matrix/) | Matrix channel documentation |
+| [`qq/`](./channels/qq/) | QQ channel documentation |
+| [`onebot/`](./channels/onebot/) | OneBot channel documentation |
+| [`dingtalk/`](./channels/dingtalk/) | DingTalk channel documentation |
+| [`feishu/`](./channels/feishu/) | Feishu/Lark channel documentation |
+| [`wecom/`](./channels/wecom/) | WeCom (企业微信) channel documentation |
+| [`line/`](./channels/line/) | LINE channel documentation |
+| [`maixcam/`](./channels/maixcam/) | MaixCam channel documentation |
+
+---
+
+## Package Structure Overview
+
+### Core Packages (`pkg/`)
+
+| Package | Description |
+| --- | --- |
+| `agent/` | Main agent loop, message handling, tool execution |
+| `channels/` | Platform integrations (Telegram, Discord, Slack, Matrix, QQ, WeChat, etc.) |
+| `providers/` | LLM provider integrations (OpenAI, Anthropic, Gemini, Zhipu, DeepSeek, etc.) |
+| `tools/` | Available tools (web search, file operations, cron, shell, MCP, etc.) |
+| `skills/` | Extensible skill system for adding capabilities |
+| `config/` | Configuration management and loading |
+| `memory/` | Long-term memory system (MEMORY.md) |
+| `session/` | Session and conversation management |
+| `bus/` | Internal event bus for channel communication |
+| `commands/` | Slash command definitions and execution |
+| `routing/` | Smart Router V2 (4-tier model routing) |
+| `mcp/` | Model Context Protocol integration |
+| `auth/` | OAuth authentication management |
+| `cron/` | Scheduled task management |
+| `health/` | Health check and metrics server |
+| `heartbeat/` | Periodic task prompts |
+| `identity/` | Unified user identity management |
+| `logger/` | Structured logging |
+| `media/` | Media file lifecycle management |
+| `migrate/` | Configuration migration utilities |
+| `state/` | Persistent state management |
+| `utils/` | Shared utilities |
+| `voice/` | Voice/audio processing |
+| `devices/` | Hardware device interfaces (I2C, SPI) |
+| `fileutil/` | File operation utilities |
+| `constants/` | Shared constants |
+
+### CLI Commands (`cmd/moonhub/internal/`)
+
+| Command | Description |
+| --- | --- |
+| `agent/` | Interactive chat mode (`moonhub agent`) |
+| `gateway/` | Long-running bot server for multi-channel support (`moonhub gateway`) |
+| `onboard/` | Initial setup wizard (`moonhub onboard`) |
+| `auth/` | OAuth authentication management (`moonhub auth`) |
+| `cron/` | Scheduled task management (`moonhub cron`) |
+| `skills/` | Skills management commands |
+| `status/` | System status display |
+| `version/` | Version information |
+| `migrate/` | Configuration migration |
+| `model/` | Model management |
+
+### Web Interface (`web/`)
+
+| Directory | Description |
+| --- | --- |
+| `frontend/` | React + Vite + TanStack Router dashboard |
+| `backend/` | Go web server with embedded frontend |
+
+---
+
+## Supported LLM Providers (`pkg/providers/`)
+
+MoonHub supports multiple LLM providers with a unified interface:
+
+| Provider | Package | Models |
+| --- | --- | --- |
+| OpenAI | `openai_compat/` | GPT-4, GPT-4o, GPT-3.5-turbo |
+| Anthropic | `anthropic/` | Claude Opus 4.5/4.6, Claude Sonnet 4.6, Claude Haiku 4.5 |
+| Zhipu (智谱) | `anthropic/` | GLM-4, GLM-4-Flash, GLM-4.7 |
+| DeepSeek | `openai_compat/` | DeepSeek Chat, DeepSeek Reasoner |
+| Gemini | `openai_compat/` | Gemini Pro, Gemini Ultra |
+| Groq | `openai_compat/` | Llama, Mixtral (fast inference) |
+| Moonshot | `openai_compat/` | Moonshot-v1 |
+| Qwen (通义千问) | `openai_compat/` | Qwen-Turbo, Qwen-Plus, Qwen-Max |
+| NVIDIA NIM | `openai_compat/` | NVIDIA hosted models |
+| Ollama | `openai_compat/` | Local models via Ollama |
+| OpenRouter | `openai_compat/` | Multi-provider gateway |
+| vLLM | `openai_compat/` | High-performance inference |
+| Cerebras | `openai_compat/` | Fast inference |
+| Volcengine (火山引擎) | `openai_compat/` | Doubao models |
+| Claude CLI | `claude_cli_provider.go` | Claude via CLI |
+| Codex CLI | `codex_cli_provider.go` | Codex via CLI |
+| GitHub Copilot | `github_copilot_provider.go` | GitHub Copilot integration |
+
+**Model Format**: `provider/model` (e.g., `openai/gpt-4`, `anthropic/claude-opus-4-6`, `zhipu/glm-4.7`)
+
+---
+
+## Available Tools (`pkg/tools/`)
+
+| Tool | File | Description |
+| --- | --- | --- |
+| Cron | `cron.go` | Scheduled task management |
+| Edit | `edit.go` | File editing operations |
+| Filesystem | `filesystem.go` | File read/write operations |
+| I2C | `i2c.go` | I2C hardware interface (Linux) |
+| MCP Tool | `mcp_tool.go` | Model Context Protocol integration |
+| Memory | `memory_tool.go` | Long-term memory operations |
+| Message | `message.go` | Message handling utilities |
+| Search | `search_tool.go` | Web search capabilities |
+| Send File | `send_file.go` | File sending via channels |
+| Shell | `shell.go` | Shell command execution |
+| Shield Adapter | `shield_adapter.go` | SHIELD security integration |
+| Skills Install | `skills_install.go` | Skill installation |
+| Skills Search | `skills_search.go` | Skill discovery |
+| Spawn | `spawn.go` | Process spawning |
+| SPI | `spi.go` | SPI hardware interface (Linux) |
+| Subagent | `subagent.go` | Sub-agent delegation |
+| Web | `web.go` | HTTP/web operations |
+
+---
+
+## Workspace Structure (`~/.moonhub/workspace/`)
+
+```
+workspace/
+├── sessions/          # Conversation sessions
+├── memory/           # Long-term memory (MEMORY.md)
+├── state/            # Persistent state
+├── cron/             # Scheduled tasks database
+├── skills/           # Custom skills
+├── AGENTS.md         # Agent behavior instructions
+├── HEARTBEAT.md      # Periodic task prompts
+├── IDENTITY.md       # Agent identity settings
+├── SOUL.md           # Agent personality
+├── USER.md           # User preferences
+└── SHIELD.md         # Security policies (optional)
+```
+
+---
+
+## Quick Reference Links
+
+| Resource | Link |
+| --- | --- |
+| Main README | [`../README.md`](../README.md) |
+| CLAUDE.md (Dev Guide) | [`../CLAUDE.md`](../CLAUDE.md) |
+| Config Example | [`../config/config.example.json`](../config/config.example.json) |
+| Makefile | [`../Makefile`](../Makefile) |
+| Docker Support | [`../docker/`](../docker/) |
