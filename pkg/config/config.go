@@ -308,10 +308,39 @@ type SessionConfig struct {
 // Messages scoring below Threshold are sent to LightModel; all others use the
 // agent's primary model. This reduces cost and latency for simple tasks without
 // requiring any keyword matching — all scoring is language-agnostic.
+//
+// V2 4-tier routing (TinyClaw style):
+// When TierMapping is configured, the router uses 4 tiers instead of 2:
+// - simple: greetings, trivial Q&A
+// - moderate: short questions, simple tasks
+// - complex: coding, long context
+// - reasoning: deep analysis, multi-modal
 type RoutingConfig struct {
 	Enabled    bool    `json:"enabled"`
 	LightModel string  `json:"light_model"` // model_name from model_list to use for simple tasks
 	Threshold  float64 `json:"threshold"`   // complexity score in [0,1]; score >= threshold → primary model
+
+	// V2 4-tier routing (TinyClaw style)
+	TierMapping    map[string]string    `json:"tier_mapping,omitempty"`    // tier -> model_name (e.g., {"simple": "gpt-3.5", "complex": "gpt-4"})
+	TierBoundaries *TierBoundariesConfig `json:"tier_boundaries,omitempty"` // custom tier boundaries
+}
+
+// TierBoundariesConfig holds custom score boundaries for the 4-tier system.
+// Each field defines the threshold between tiers. Pointer fields distinguish
+// "JSON omitted / unset" from an explicit 0.0 (e.g. simple_moderate: 0).
+// Omitted fields fall back to defaults: -0.05, 0.15, 0.35.
+type TierBoundariesConfig struct {
+	SimpleModerate   *float64 `json:"simple_moderate,omitempty"`
+	ModerateComplex  *float64 `json:"moderate_complex,omitempty"`
+	ComplexReasoning *float64 `json:"complex_reasoning,omitempty"`
+}
+
+// HasCustomBoundaries returns true if any cutpoint was set in JSON/config.
+func (c *TierBoundariesConfig) HasCustomBoundaries() bool {
+	if c == nil {
+		return false
+	}
+	return c.SimpleModerate != nil || c.ModerateComplex != nil || c.ComplexReasoning != nil
 }
 
 type AgentDefaults struct {
