@@ -82,6 +82,20 @@ const (
 	metadataKeyParentPeerID   = "parent_peer_id"
 )
 
+// delegationUserIDForOpts returns the delegation store partition key for this turn.
+// It must match the value injected into tool context via ExecuteWithContext.
+func delegationUserIDForOpts(o processOptions) string {
+	if sk := strings.TrimSpace(o.SessionKey); sk != "" {
+		return "deleg:" + strings.ToLower(sk)
+	}
+	c := strings.ToLower(strings.TrimSpace(o.Channel))
+	ch := strings.TrimSpace(o.ChatID)
+	if c != "" || ch != "" {
+		return fmt.Sprintf("deleg:%s|%s", c, ch)
+	}
+	return "default"
+}
+
 func NewAgentLoop(
 	cfg *config.Config,
 	msgBus *bus.MessageBus,
@@ -964,10 +978,18 @@ func (al *AgentLoop) runAgentLoop(
 			summary = al.getTieredSummary(ctx, agent, opts.SessionKey, len(history))
 		}
 	}
+	userMsg := opts.UserMessage
+	if agent.Delegation != nil && agent.Delegation.IsEnabled() {
+		uid := delegationUserIDForOpts(opts)
+		if inj := InjectBackgroundTaskResults(ctx, agent.Delegation, uid); inj != "" {
+			userMsg = inj + "\n\n" + userMsg
+		}
+	}
+
 	messages := agent.ContextBuilder.BuildMessages(
 		history,
 		summary,
-		opts.UserMessage,
+		userMsg,
 		opts.Media,
 		opts.Channel,
 		opts.ChatID,
@@ -1516,6 +1538,7 @@ func (al *AgentLoop) runLLMIteration(
 					tc.Arguments,
 					opts.Channel,
 					opts.ChatID,
+					delegationUserIDForOpts(opts),
 					asyncCallback,
 				)
 				if toolResult != nil && toolResult.RequiresApproval && !toolResult.Async {
@@ -2375,7 +2398,7 @@ func (al *AgentLoop) runToolPendingApproval(
 		})
 
 	execCtx := shield.ContextWithApprovedToolExecution(ctx)
-	return agent.Tools.ExecuteWithContext(execCtx, tc.Name, tc.Arguments, opts.Channel, opts.ChatID, asyncCallback)
+	return agent.Tools.ExecuteWithContext(execCtx, tc.Name, tc.Arguments, opts.Channel, opts.ChatID, delegationUserIDForOpts(opts), asyncCallback)
 }
 
 func shieldEventForPendingTool(tc providers.ToolCall) shield.ShieldEvent {

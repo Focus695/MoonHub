@@ -65,6 +65,9 @@ type AgentInstance struct {
 
 	// ApprovalManager manages approval requests for actions that require user confirmation.
 	ApprovalManager *shield.ApprovalManager
+
+	// Delegation is the sub-agent delegation system (nil when disabled or init failed).
+	Delegation *DelegationIntegration
 }
 
 // NewAgentInstance creates an agent instance from config.
@@ -290,6 +293,19 @@ func NewAgentInstance(
 	// Initialize approval manager for require_approval actions
 	approvalManager := shield.NewApprovalManager(5 * time.Minute)
 
+	var delegationIntegration *DelegationIntegration
+	if cfg.Delegation.Enabled {
+		di, derr := NewDelegationIntegration(workspace, provider, model, cfg.Delegation)
+		if derr != nil {
+			log.Printf("delegation: initialization failed: %v", derr)
+		} else {
+			delegationIntegration = di
+			if delegationIntegration.IsEnabled() {
+				delegationIntegration.RegisterTools(toolsRegistry)
+			}
+		}
+	}
+
 	return &AgentInstance{
 		ID:                           agentID,
 		Name:                         agentName,
@@ -316,6 +332,7 @@ func NewAgentInstance(
 		CompactorTriggerTokenPercent: triggerPct,
 		Shield:                       shieldEngine,
 		ApprovalManager:              approvalManager,
+		Delegation:                   delegationIntegration,
 	}
 }
 
@@ -380,6 +397,12 @@ func (a *AgentInstance) Close() error {
 
 	if a.ApprovalManager != nil {
 		a.ApprovalManager.Close()
+	}
+
+	if a.Delegation != nil {
+		if err := a.Delegation.Close(); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
 	if len(errs) > 0 {

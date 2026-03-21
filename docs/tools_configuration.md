@@ -2,6 +2,8 @@
 
 MoonHub's tools configuration is located in the `tools` field of `config.json`.
 
+Other top-level keys (for example `delegation`, `learning`, `compactor`, `shield`) are documented in the [documentation index](./README.md) and under [`docs/implementation/`](./implementation/). For **`delegation`** specifically, see also [`pkg/delegation/docs/CONFIG.md`](../pkg/delegation/docs/CONFIG.md).
+
 ## Directory Structure
 
 ```json

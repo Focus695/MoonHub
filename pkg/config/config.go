@@ -88,6 +88,7 @@ type Config struct {
 	Voice          VoiceConfig          `json:"voice"`
 	AdaptiveMemory AdaptiveMemoryConfig `json:"adaptive_memory,omitempty"` // Adaptive memory system configuration
 	Compactor      CompactorConfig      `json:"compactor,omitempty"`      // Context compactor configuration
+	Delegation     DelegationConfig     `json:"delegation,omitempty"`     // Delegation system configuration
 	// BuildInfo contains build-time version information
 	BuildInfo BuildInfo `json:"build_info,omitempty"`
 }
@@ -161,6 +162,28 @@ func DefaultCompactorConfig() CompactorConfig {
 		SmartRuleSelection:       true,
 		ParallelProcessing:       true,
 		IncrementalCompaction:    true,
+	}
+}
+
+// DelegationConfig configures the sub-agent delegation system
+type DelegationConfig struct {
+	Enabled              bool     `json:"enabled"                env:"MOONHUB_DELEGATION_ENABLED"`
+	DefaultSubAgentTools []string `json:"default_sub_agent_tools"`
+	MaxActivePerUser     int      `json:"max_active_per_user"    env:"MOONHUB_DELEGATION_MAX_ACTIVE_PER_USER"`
+	MaxConcurrentTasks   int      `json:"max_concurrent_tasks"   env:"MOONHUB_DELEGATION_MAX_CONCURRENT_TASKS"`
+	RetentionDays        int      `json:"retention_days"         env:"MOONHUB_DELEGATION_RETENTION_DAYS"`
+	ReuseThreshold       float64  `json:"reuse_threshold"        env:"MOONHUB_DELEGATION_REUSE_THRESHOLD"`
+}
+
+// DefaultDelegationConfig returns the default delegation configuration
+func DefaultDelegationConfig() DelegationConfig {
+	return DelegationConfig{
+		Enabled:              false, // Disabled by default
+		DefaultSubAgentTools: []string{"read_file", "list_dir", "web_search", "web_fetch", "memory_recall"},
+		MaxActivePerUser:     10,
+		MaxConcurrentTasks:   3,
+		RetentionDays:        14,
+		ReuseThreshold:       0.6,
 	}
 }
 

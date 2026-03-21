@@ -6,7 +6,8 @@ This page is the **entry point and reading guide** for the repository documentat
 
 1. [Repository Root README](../README.md) — Feature overview, license, and recent changelog summary
 2. [Troubleshooting](./troubleshooting.md), [Debug Guide](./debug.md) — Runtime issues reference
-3. [Tools & Capabilities Configuration](./tools_configuration.md) — Tool-side configuration
+3. [Tools & Capabilities Configuration](./tools_configuration.md) — Tool-side configuration (`tools.*` in `config.json`)
+4. If you enable **sub-agent delegation** (`delegation.enabled`): [pkg/delegation/docs/README.md](../pkg/delegation/docs/README.md) → [CONFIG.md](../pkg/delegation/docs/CONFIG.md) → [implementation status](./implementation/delegation-status.md)
 
 ## Documentation Flow by Subsystem
 
@@ -55,9 +56,17 @@ This page is the **entry point and reading guide** for the repository documentat
 | --- | --- |
 | [`docs/implementation/memory-status.md`](./implementation/memory-status.md) | Package structure, capabilities, configuration, and integration notes; source in `pkg/adaptive_memory/` |
 
+### Delegation System (sub-agent orchestration)
+
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/delegation/docs/README.md`](../pkg/delegation/docs/README.md) | Responsibilities, source map, integration table |
+| 2 | [`pkg/delegation/docs/CONFIG.md`](../pkg/delegation/docs/CONFIG.md) | `delegation` in `config.json` and environment variables |
+| Status | [`docs/implementation/delegation-status.md`](./implementation/delegation-status.md) | Schema, eight tools, Intercom topics, examples, tests |
+
 ### Channels
 
-[`docs/channels/`](./channels/) contains documentation for each channel.
+Channel architecture, migration, and how to implement a channel: [`pkg/channels/README.md`](../pkg/channels/README.md). Per-channel behavior also lives with each plugin under [`pkg/plugins/channels/`](../pkg/plugins/channels/) (see [`pkg/plugins/docs/PLUGIN_INDEX.md`](../pkg/plugins/docs/PLUGIN_INDEX.md)).
 
 ---
 
@@ -70,3 +79,4 @@ This page is the **entry point and reading guide** for the repository documentat
 | [`compactor-status.md`](./implementation/compactor-status.md) | Context compactor implementation status |
 | [`shield-status.md`](./implementation/shield-status.md) | SHIELD runtime security implementation status |
 | [`memory-status.md`](./implementation/memory-status.md) | Memory system implementation status |
+| [`delegation-status.md`](./implementation/delegation-status.md) | Sub-agent delegation orchestration implementation status |

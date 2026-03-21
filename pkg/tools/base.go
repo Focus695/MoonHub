@@ -1,6 +1,9 @@
 package tools
 
-import "context"
+import (
+	"context"
+	"strings"
+)
 
 // Tool is the interface that all tools must implement.
 type Tool interface {
@@ -21,8 +24,9 @@ type Tool interface {
 type toolCtxKey struct{ name string }
 
 var (
-	ctxKeyChannel = &toolCtxKey{"channel"}
-	ctxKeyChatID  = &toolCtxKey{"chatID"}
+	ctxKeyChannel          = &toolCtxKey{"channel"}
+	ctxKeyChatID           = &toolCtxKey{"chatID"}
+	ctxKeyDelegationUserID = &toolCtxKey{"delegationUserID"}
 )
 
 // WithToolContext returns a child context carrying channel and chatID.
@@ -41,6 +45,21 @@ func ToolChannel(ctx context.Context) string {
 // ToolChatID extracts the chatID from ctx, or "" if unset.
 func ToolChatID(ctx context.Context) string {
 	v, _ := ctx.Value(ctxKeyChatID).(string)
+	return v
+}
+
+// WithDelegationUserID returns a child context carrying the delegation partition key
+// (per-session / per-chat namespace for sub-agents and background tasks).
+func WithDelegationUserID(ctx context.Context, delegationUserID string) context.Context {
+	return context.WithValue(ctx, ctxKeyDelegationUserID, delegationUserID)
+}
+
+// DelegationUserID returns the delegation partition from ctx, or "default" if unset.
+func DelegationUserID(ctx context.Context) string {
+	v, _ := ctx.Value(ctxKeyDelegationUserID).(string)
+	if strings.TrimSpace(v) == "" {
+		return "default"
+	}
 	return v
 }
 
