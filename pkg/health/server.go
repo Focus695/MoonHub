@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/sipeed/moonhub/pkg/routing"
 )
 
 type Server struct {
@@ -41,6 +43,9 @@ func NewServer(host string, port int) *Server {
 
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/ready", s.readyHandler)
+	mux.HandleFunc("/metrics", s.metricsHandler)
+	mux.HandleFunc("/routing/decisions", s.routingDecisionsHandler)
+	mux.HandleFunc("/routing/stats", s.routingStatsHandler)
 
 	addr := fmt.Sprintf("%s:%d", host, port)
 	s.server = &http.Server{
@@ -160,6 +165,92 @@ func (s *Server) readyHandler(w http.ResponseWriter, r *http.Request) {
 func (s *Server) RegisterOnMux(mux *http.ServeMux) {
 	mux.HandleFunc("/health", s.healthHandler)
 	mux.HandleFunc("/ready", s.readyHandler)
+	mux.HandleFunc("/metrics", s.metricsHandler)
+	mux.HandleFunc("/routing/decisions", s.routingDecisionsHandler)
+	mux.HandleFunc("/routing/stats", s.routingStatsHandler)
+}
+
+// metricsHandler returns routing metrics in JSON format.
+// Privacy: Only returns aggregated statistics, no user content.
+func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	metrics := routing.GetGlobalMetrics()
+	snapshot := metrics.GetSnapshot()
+
+	// Convert to JSON-friendly format
+	response := map[string]any{
+		"timestamp":            snapshot.Timestamp,
+		"total_classifications": snapshot.TotalClassifications,
+		"avg_score":            snapshot.AvgScore,
+		"avg_confidence":       snapshot.AvgConfidence,
+		"tier_counts":          snapshot.TierCounts,
+		"signal_counts":        snapshot.SignalCounts,
+		"score_distribution":   snapshot.ScoreDistribution,
+		"confidence_distribution": snapshot.ConfidenceDistribution,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// routingDecisionsHandler returns recent routing decisions for visualization.
+// Privacy: Returns only statistical data, no user message content.
+func (s *Server) routingDecisionsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	recorder := routing.GetGlobalRecorder()
+
+	// Parse query parameters
+	limit := 50
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := parseIntParam(l); err == nil && parsed > 0 && parsed <= 500 {
+			limit = parsed
+		}
+	}
+
+	tier := r.URL.Query().Get("tier")
+	var decisions []routing.DecisionRecord
+
+	if tier != "" {
+		parsed, ok := routing.TryParseTier(tier)
+		if !ok {
+			w.WriteHeader(http.StatusBadRequest)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"error": "invalid tier (use simple, moderate, complex, or reasoning)",
+			})
+			return
+		}
+		decisions = recorder.GetByTier(parsed, limit)
+	} else {
+		decisions = recorder.GetRecent(limit)
+	}
+
+	response := map[string]any{
+		"total":     recorder.Count(),
+		"limit":     limit,
+		"decisions": decisions,
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response)
+}
+
+// routingStatsHandler returns aggregated statistics about routing decisions.
+func (s *Server) routingStatsHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+
+	recorder := routing.GetGlobalRecorder()
+	stats := recorder.GetStats()
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(stats)
+}
+
+func parseIntParam(s string) (int, error) {
+	var result int
+	_, err := fmt.Sscanf(s, "%d", &result)
+	return result, err
 }
 
 func statusString(ok bool) string {
