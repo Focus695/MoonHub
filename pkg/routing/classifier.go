@@ -1,5 +1,47 @@
 package routing
 
+// Signal represents a single contributing factor to the complexity classification.
+// Each signal has a name, contribution value, and optional raw value for debugging.
+type Signal struct {
+	// Name is a human-readable identifier for the signal (e.g., "token_long", "code_block").
+	Name string
+
+	// Contribution is the numeric value this signal adds to the complexity score.
+	// Can be negative (e.g., short_message_bonus = -0.10).
+	Contribution float64
+
+	// RawValue holds the original value that triggered this signal (e.g., token count, code block count).
+	RawValue any
+}
+
+// ClassificationResult contains the complete output from the V2 classifier.
+// It provides not just the tier and score, but also confidence and signal traces
+// for debugging and observability.
+type ClassificationResult struct {
+	// Tier is the selected complexity tier (simple/moderate/complex/reasoning).
+	Tier QueryTier
+
+	// Score is the raw complexity score, which may be negative for very simple messages.
+	// Range: approximately [-1.0, 1.0].
+	Score float64
+
+	// Confidence indicates how certain the classifier is about the tier selection.
+	// Higher values mean the score is clearly within a tier's boundaries.
+	// Range: [0, 1], computed via sigmoid function.
+	Confidence float64
+
+	// Signals lists the individual factors that contributed to the final score.
+	// Useful for debugging and explaining routing decisions.
+	Signals []Signal
+}
+
+// ClassifierV2 evaluates a feature set and returns a detailed classification result.
+// Unlike the legacy Classifier interface which only returns a score, ClassifierV2
+// provides tier mapping, confidence, and signal tracing.
+type ClassifierV2 interface {
+	Classify(f Features) ClassificationResult
+}
+
 // Classifier evaluates a feature set and returns a complexity score in [0, 1].
 // A higher score indicates a more complex task that benefits from a heavy model.
 // The score is compared against the configured threshold: score >= threshold selects
