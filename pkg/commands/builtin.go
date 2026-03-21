@@ -13,5 +13,7 @@ func BuiltinDefinitions() []Definition {
 		switchCommand(),
 		checkCommand(),
 		clearCommand(),
+		approveCommand(),
+		rejectCommand(),
 	}
 }

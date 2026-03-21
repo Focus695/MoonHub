@@ -11,6 +11,7 @@ import (
 
 	"github.com/sipeed/moonhub/pkg/fileutil"
 	"github.com/sipeed/moonhub/pkg/logger"
+	"github.com/sipeed/moonhub/pkg/shield"
 	"github.com/sipeed/moonhub/pkg/skills"
 	"github.com/sipeed/moonhub/pkg/utils"
 )
@@ -21,16 +22,19 @@ import (
 type InstallSkillTool struct {
 	registryMgr *skills.RegistryManager
 	workspace   string
+	shield      *shield.ShieldEngine
 	mu          sync.Mutex
 }
 
 // NewInstallSkillTool creates a new InstallSkillTool.
 // registryMgr is the shared registry manager (same instance as FindSkillsTool).
 // workspace is the root workspace directory; skills install to {workspace}/skills/{slug}/.
-func NewInstallSkillTool(registryMgr *skills.RegistryManager, workspace string) *InstallSkillTool {
+// shield is the optional shield engine for threat evaluation (can be nil).
+func NewInstallSkillTool(registryMgr *skills.RegistryManager, workspace string, shieldEngine *shield.ShieldEngine) *InstallSkillTool {
 	return &InstallSkillTool{
 		registryMgr: registryMgr,
 		workspace:   workspace,
+		shield:      shieldEngine,
 		mu:          sync.Mutex{},
 	}
 }
@@ -76,12 +80,64 @@ func (t *InstallSkillTool) Execute(ctx context.Context, args map[string]any) *To
 
 	// Validate slug
 	slug, _ := args["slug"].(string)
+	registryName, _ := args["registry"].(string)
+
+	// Shield evaluation for skill installation (skipped after loop-level approval)
+	if !shield.ApprovedToolExecution(ctx) && t.shield != nil && t.shield.IsActive() {
+		decision := t.shield.Evaluate(shield.ShieldEvent{
+			Scope:     shield.ScopeSkillInstall,
+			SkillName: slug,
+			ToolArgs:  args,
+		})
+
+		switch decision.Action {
+		case shield.ActionBlock:
+			logger.WarnCF("tool", "Skill installation blocked by security policy",
+				map[string]any{
+					"tool":       "install_skill",
+					"skill":      slug,
+					"registry":   registryName,
+					"threat_id":  decision.ThreatID,
+					"reason":     decision.Reason,
+				})
+			return ErrorResult(fmt.Sprintf("Skill installation blocked by security policy: %s", decision.Reason))
+
+		case shield.ActionRequireApproval:
+			// Return a special result that indicates approval is needed
+			// The agent loop will handle the approval flow
+			logger.WarnCF("tool", "Skill installation requires approval",
+				map[string]any{
+					"tool":      "install_skill",
+					"skill":     slug,
+					"registry":  registryName,
+					"threat_id": decision.ThreatID,
+				})
+			return &ToolResult{
+				ForLLM:  fmt.Sprintf("Skill installation requires approval: %s", decision.Reason),
+				IsError: false,
+				RequiresApproval: true,
+			}
+
+		case shield.ActionLog:
+			if decision.ThreatID != "" {
+				logger.InfoCF("tool", "Skill installation logged",
+					map[string]any{
+						"tool":       "install_skill",
+						"skill":      slug,
+						"registry":   registryName,
+						"threat_id":  decision.ThreatID,
+						"match_on":   decision.MatchedOn,
+						"match_value": decision.MatchValue,
+					})
+			}
+		}
+	}
+
 	if err := utils.ValidateSkillIdentifier(slug); err != nil {
 		return ErrorResult(fmt.Sprintf("invalid slug %q: error: %s", slug, err.Error()))
 	}
 
 	// Validate registry
-	registryName, _ := args["registry"].(string)
 	if err := utils.ValidateSkillIdentifier(registryName); err != nil {
 		return ErrorResult(fmt.Sprintf("invalid registry %q: error: %s", registryName, err.Error()))
 	}

@@ -15,6 +15,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/sipeed/moonhub/pkg/shield"
 	"github.com/sipeed/moonhub/pkg/utils"
 )
 
@@ -777,6 +778,60 @@ type WebFetchTool struct {
 	proxy           string
 	client          *http.Client
 	fetchLimitBytes int64
+	shield          ShieldEvaluator
+}
+
+// ShieldEvaluator is an interface for shield evaluation (to avoid circular import).
+type ShieldEvaluator interface {
+	IsActive() bool
+	Evaluate(event ShieldEvent) ShieldDecision
+}
+
+// ShieldEvent represents an event for shield evaluation.
+type ShieldEvent struct {
+	Scope     ShieldScope `json:"scope"`
+	ToolName  string      `json:"tool_name,omitempty"`
+	ToolArgs  map[string]any `json:"tool_args,omitempty"`
+	Domain    string      `json:"domain,omitempty"`
+	URL       string      `json:"url,omitempty"`
+	SkillName string      `json:"skill_name,omitempty"`
+}
+
+// ShieldScope represents the event scope.
+type ShieldScope string
+
+const (
+	ScopeToolCall      ShieldScope = "tool.call"
+	ScopeSkillInstall  ShieldScope = "skill.install"
+	ScopeSkillExecute  ShieldScope = "skill.execute"
+	ScopeNetworkEgress ShieldScope = "network.egress"
+	ScopeSecretsRead   ShieldScope = "secrets.read"
+	ScopePrompt        ShieldScope = "prompt"
+)
+
+// ShieldAction represents the enforcement action.
+type ShieldAction string
+
+const (
+	ActionBlock          ShieldAction = "block"
+	ActionRequireApproval ShieldAction = "require_approval"
+	ActionLog            ShieldAction = "log"
+)
+
+// ShieldDecision represents the enforcement decision.
+type ShieldDecision struct {
+	Action      ShieldAction `json:"action"`
+	Scope       ShieldScope  `json:"scope"`
+	ThreatID    string       `json:"threat_id,omitempty"`
+	Reason      string       `json:"reason"`
+	MatchedOn   string       `json:"matched_on,omitempty"`
+	MatchValue  string       `json:"match_value,omitempty"`
+}
+
+// WithShield sets the shield evaluator for the tool.
+func (t *WebFetchTool) WithShield(shield ShieldEvaluator) *WebFetchTool {
+	t.shield = shield
+	return t
 }
 
 func NewWebFetchTool(maxChars int, fetchLimitBytes int64) (*WebFetchTool, error) {
@@ -873,6 +928,30 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 	hostname := parsedURL.Hostname()
 	if isObviousPrivateHost(hostname) {
 		return ErrorResult("fetching private or local network hosts is not allowed")
+	}
+
+	// Shield evaluation for network egress (skipped after loop-level approval; see shield.ContextWithApprovedToolExecution)
+	if !shield.ApprovedToolExecution(ctx) && t.shield != nil && t.shield.IsActive() {
+		decision := t.shield.Evaluate(ShieldEvent{
+			Scope:  ScopeNetworkEgress,
+			URL:    urlStr,
+			Domain: hostname,
+			ToolArgs: args,
+		})
+
+		switch decision.Action {
+		case ActionBlock:
+			return ErrorResult(fmt.Sprintf("Network request blocked by security policy: %s", decision.Reason))
+		case ActionRequireApproval:
+			// Return result requiring approval - agent loop will handle
+			return &ToolResult{
+				ForLLM:           fmt.Sprintf("Network request requires approval: %s", decision.Reason),
+				IsError:          false,
+				RequiresApproval: true,
+			}
+		case ActionLog:
+			// Log but continue
+		}
 	}
 
 	maxChars := t.maxChars

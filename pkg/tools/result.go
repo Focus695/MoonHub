@@ -27,6 +27,10 @@ type ToolResult struct {
 	// When true, the tool will complete later and notify via callback.
 	Async bool `json:"async"`
 
+	// RequiresApproval indicates that this tool result needs user approval.
+	// When true, the agent should handle the approval flow before proceeding.
+	RequiresApproval bool `json:"requires_approval,omitempty"`
+
 	// Err is the underlying error (not JSON serialized).
 	// Used for internal error handling and logging.
 	Err error `json:"-"`

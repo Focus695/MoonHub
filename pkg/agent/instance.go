@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/sipeed/moonhub/pkg/compactor"
 	"github.com/sipeed/moonhub/pkg/config"
@@ -15,6 +16,7 @@ import (
 	"github.com/sipeed/moonhub/pkg/providers"
 	"github.com/sipeed/moonhub/pkg/routing"
 	"github.com/sipeed/moonhub/pkg/session"
+	"github.com/sipeed/moonhub/pkg/shield"
 	"github.com/sipeed/moonhub/pkg/tools"
 )
 
@@ -56,6 +58,13 @@ type AgentInstance struct {
 	// CompactorTriggerTokenPercent is the token-usage threshold (percent of ContextWindow) at which
 	// async compaction runs when the compactor is enabled. Sourced from config compactor.trigger_token_percent.
 	CompactorTriggerTokenPercent int
+
+	// Shield is the threat evaluation engine for runtime security enforcement.
+	// It evaluates tool calls and other events against threat definitions from SHIELD.md.
+	Shield *shield.ShieldEngine
+
+	// ApprovalManager manages approval requests for actions that require user confirmation.
+	ApprovalManager *shield.ApprovalManager
 }
 
 // NewAgentInstance creates an agent instance from config.
@@ -261,6 +270,26 @@ func NewAgentInstance(
 		}
 	}
 
+	// Initialize shield engine for runtime threat evaluation
+	var shieldEngine *shield.ShieldEngine
+	shieldPath := filepath.Join(workspace, "SHIELD.md")
+	if _, err := os.Stat(shieldPath); err == nil {
+		var loadErr error
+		shieldEngine, loadErr = shield.NewEngineFromFile(shieldPath)
+		if loadErr != nil {
+			log.Printf("shield: failed to read/parse %s: %v; using default threat feed", shieldPath, loadErr)
+			shieldEngine = shield.NewEngineWithDefaults()
+		} else {
+			log.Printf("shield: loaded threat feed from %s", shieldPath)
+		}
+	} else {
+		shieldEngine = shield.NewEngineWithDefaults()
+		log.Printf("shield: using default threat feed (%d threats)", shieldEngine.GetThreatCount())
+	}
+
+	// Initialize approval manager for require_approval actions
+	approvalManager := shield.NewApprovalManager(5 * time.Minute)
+
 	return &AgentInstance{
 		ID:                           agentID,
 		Name:                         agentName,
@@ -285,6 +314,8 @@ func NewAgentInstance(
 		LightCandidates:              lightCandidates,
 		Compactor:                    compactorEngine,
 		CompactorTriggerTokenPercent: triggerPct,
+		Shield:                       shieldEngine,
+		ApprovalManager:              approvalManager,
 	}
 }
 
@@ -331,7 +362,7 @@ func compilePatterns(patterns []string) []*regexp.Regexp {
 	return compiled
 }
 
-// Close releases resources held by the agent's session store and compactor.
+// Close releases resources held by the agent's session store, compactor, and approval manager.
 func (a *AgentInstance) Close() error {
 	var errs []error
 
@@ -345,6 +376,10 @@ func (a *AgentInstance) Close() error {
 		if err := a.Compactor.Close(); err != nil {
 			errs = append(errs, err)
 		}
+	}
+
+	if a.ApprovalManager != nil {
+		a.ApprovalManager.Close()
 	}
 
 	if len(errs) > 0 {

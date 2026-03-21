@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/url"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -30,6 +31,7 @@ import (
 	"github.com/sipeed/moonhub/pkg/media"
 	"github.com/sipeed/moonhub/pkg/providers"
 	"github.com/sipeed/moonhub/pkg/routing"
+	"github.com/sipeed/moonhub/pkg/shield"
 	"github.com/sipeed/moonhub/pkg/skills"
 	"github.com/sipeed/moonhub/pkg/state"
 	"github.com/sipeed/moonhub/pkg/tools"
@@ -257,7 +259,7 @@ func registerSharedTools(
 			}
 
 			if install_skills_enable {
-				agent.Tools.Register(tools.NewInstallSkillTool(registryMgr, agent.Workspace))
+				agent.Tools.Register(tools.NewInstallSkillTool(registryMgr, agent.Workspace, agent.Shield))
 			}
 		}
 
@@ -285,6 +287,26 @@ func registerSharedTools(
 				agent.Tools.Register(memoryTool)
 			}
 		}
+
+		attachShieldToWebFetchTool(agent)
+	}
+}
+
+// attachShieldToWebFetchTool wires the agent's Shield engine into web_fetch (builtin or plugin-provided).
+func attachShieldToWebFetchTool(agent *AgentInstance) {
+	if agent == nil || agent.Shield == nil {
+		return
+	}
+	se := tools.NewShieldEvaluatorFromEngine(agent.Shield)
+	if se == nil {
+		return
+	}
+	t, ok := agent.Tools.Get("web_fetch")
+	if !ok {
+		return
+	}
+	if wf, ok := t.(*tools.WebFetchTool); ok {
+		wf.WithShield(se)
 	}
 }
 
@@ -391,6 +413,14 @@ func (al *AgentLoop) RegisterTool(tool tools.Tool) {
 	for _, agentID := range registry.ListAgentIDs() {
 		if agent, ok := registry.GetAgent(agentID); ok {
 			agent.Tools.Register(tool)
+		}
+	}
+	// Same as registerSharedTools: runtime-registered web_fetch must get per-agent Shield wiring.
+	if tool != nil && tool.Name() == "web_fetch" {
+		for _, agentID := range registry.ListAgentIDs() {
+			if agent, ok := registry.GetAgent(agentID); ok {
+				attachShieldToWebFetchTool(agent)
+			}
 		}
 	}
 }
@@ -1392,7 +1422,95 @@ func (al *AgentLoop) runLLMIteration(
 					})
 				}
 
-				toolResult := agent.Tools.ExecuteWithContext(
+				// Evaluate tool call against shield before execution
+				var toolResult *tools.ToolResult
+				if agent.Shield != nil && agent.Shield.IsActive() {
+					decision := agent.Shield.Evaluate(shield.ShieldEvent{
+						Scope:    shield.ScopeToolCall,
+						ToolName: tc.Name,
+						ToolArgs: tc.Arguments,
+					})
+
+					switch decision.Action {
+					case shield.ActionBlock:
+						toolResult = &tools.ToolResult{
+							ForLLM:  fmt.Sprintf("Security policy blocked this tool call: %s", decision.Reason),
+							IsError: true,
+						}
+						logger.WarnCF("shield", "Tool call blocked by security policy",
+							map[string]any{
+								"tool":       tc.Name,
+								"threat_id":  decision.ThreatID,
+								"reason":     decision.Reason,
+								"match_on":   decision.MatchedOn,
+								"match_value": decision.MatchValue,
+							})
+						agentResults[idx].result = toolResult
+						return
+					case shield.ActionRequireApproval:
+						// Create approval request
+						req := agent.ApprovalManager.CreateRequest(shield.ShieldEvent{
+							Scope:    shield.ScopeToolCall,
+							ToolName: tc.Name,
+							ToolArgs: tc.Arguments,
+						}, decision)
+
+						logger.WarnCF("shield", "Tool call requires approval - waiting for user response",
+							map[string]any{
+								"tool":         tc.Name,
+								"threat_id":    decision.ThreatID,
+								"approval_id":  req.ID,
+								"reason":       decision.Reason,
+							})
+
+						// Send approval request to user
+						approvalMsg := fmt.Sprintf("⚠️ **Approval Required**\n\nTool: `%s`\nReason: %s\n\nPlease respond with `approve %s` or `reject %s`",
+							tc.Name, decision.Reason, req.ID, req.ID)
+						al.bus.PublishOutbound(ctx, bus.OutboundMessage{
+							Channel: opts.Channel,
+							ChatID:  opts.ChatID,
+							Content: approvalMsg,
+						})
+
+						// Wait for user response
+						approved, err := agent.ApprovalManager.WaitForApproval(ctx, req.ID)
+						if err != nil || !approved {
+							toolResult = &tools.ToolResult{
+								ForLLM:  fmt.Sprintf("Tool call rejected: %s", decision.Reason),
+								IsError: true,
+							}
+							logger.InfoCF("shield", "Approval rejected or expired",
+								map[string]any{
+									"tool":        tc.Name,
+									"threat_id":   decision.ThreatID,
+									"approved":    approved,
+									"error":       err,
+								})
+							agentResults[idx].result = toolResult
+							return
+						}
+
+						// User approved, continue with tool execution
+						logger.InfoCF("shield", "Approval granted for tool call",
+							map[string]any{
+								"tool":       tc.Name,
+								"threat_id":  decision.ThreatID,
+								"approval_id": req.ID,
+							})
+					case shield.ActionLog:
+						if decision.ThreatID != "" {
+							logger.InfoCF("shield", "Threat detected (log only)",
+								map[string]any{
+									"tool":       tc.Name,
+									"threat_id":  decision.ThreatID,
+									"match_on":   decision.MatchedOn,
+									"match_value": decision.MatchValue,
+								})
+						}
+					}
+				}
+
+				toolResult = agent.Tools.ExecuteWithContext(
 					ctx,
 					tc.Name,
 					tc.Arguments,
@@ -1400,6 +1518,9 @@ func (al *AgentLoop) runLLMIteration(
 					opts.ChatID,
 					asyncCallback,
 				)
+				if toolResult != nil && toolResult.RequiresApproval && !toolResult.Async {
+					toolResult = al.runToolPendingApproval(ctx, agent, opts, tc, toolResult, asyncCallback)
+				}
 				agentResults[idx].result = toolResult
 			}(i, tc)
 		}
@@ -2173,8 +2294,120 @@ func (al *AgentLoop) buildCommandsRuntime(agent *AgentInstance, opts *processOpt
 			agent.Sessions.Save(opts.SessionKey)
 			return nil
 		}
+
+		if agent.ApprovalManager != nil {
+			rt.ApproveAction = func(approvalID string) bool {
+				return agent.ApprovalManager.Approve(approvalID)
+			}
+			rt.RejectAction = func(approvalID string) bool {
+				return agent.ApprovalManager.Reject(approvalID)
+			}
+		}
 	}
 	return rt
+}
+
+// runToolPendingApproval completes a tool that returned RequiresApproval (e.g. web_fetch, install_skill)
+// after the user approves via approve <id> / reject <id>.
+func (al *AgentLoop) runToolPendingApproval(
+	ctx context.Context,
+	agent *AgentInstance,
+	opts processOptions,
+	tc providers.ToolCall,
+	pending *tools.ToolResult,
+	asyncCallback tools.AsyncCallback,
+) *tools.ToolResult {
+	if agent.ApprovalManager == nil || agent.Shield == nil {
+		return &tools.ToolResult{
+			ForLLM:  fmt.Sprintf("%s (approval system unavailable)", pending.ForLLM),
+			IsError: true,
+		}
+	}
+
+	event := shieldEventForPendingTool(tc)
+	decision := agent.Shield.Evaluate(event)
+	if decision.Action != shield.ActionRequireApproval {
+		decision = shield.ShieldDecision{
+			Action:   shield.ActionRequireApproval,
+			Scope:    event.Scope,
+			Reason:   pending.ForLLM,
+			ThreatID: decision.ThreatID,
+		}
+	}
+
+	req := agent.ApprovalManager.CreateRequest(event, decision)
+
+	logger.WarnCF("shield", "Tool requires approval (post-check) — waiting for user response",
+		map[string]any{
+			"tool":        tc.Name,
+			"threat_id":   decision.ThreatID,
+			"approval_id": req.ID,
+			"reason":      decision.Reason,
+		})
+
+	approvalMsg := fmt.Sprintf("⚠️ **Approval Required**\n\nTool: `%s`\nReason: %s\n\nPlease respond with `approve %s` or `reject %s`",
+		tc.Name, decision.Reason, req.ID, req.ID)
+	al.bus.PublishOutbound(ctx, bus.OutboundMessage{
+		Channel: opts.Channel,
+		ChatID:  opts.ChatID,
+		Content: approvalMsg,
+	})
+
+	approved, err := agent.ApprovalManager.WaitForApproval(ctx, req.ID)
+	if err != nil || !approved {
+		logger.InfoCF("shield", "Post-tool approval rejected or expired",
+			map[string]any{
+				"tool":      tc.Name,
+				"threat_id": decision.ThreatID,
+				"approved":  approved,
+				"error":     err,
+			})
+		return &tools.ToolResult{
+			ForLLM:  fmt.Sprintf("Tool call rejected or approval timed out: %s", decision.Reason),
+			IsError: true,
+		}
+	}
+
+	logger.InfoCF("shield", "Post-tool approval granted",
+		map[string]any{
+			"tool":        tc.Name,
+			"approval_id": req.ID,
+		})
+
+	execCtx := shield.ContextWithApprovedToolExecution(ctx)
+	return agent.Tools.ExecuteWithContext(execCtx, tc.Name, tc.Arguments, opts.Channel, opts.ChatID, asyncCallback)
+}
+
+func shieldEventForPendingTool(tc providers.ToolCall) shield.ShieldEvent {
+	switch tc.Name {
+	case "web_fetch":
+		urlStr, _ := tc.Arguments["url"].(string)
+		hostname := ""
+		if u, err := url.Parse(urlStr); err == nil {
+			hostname = u.Hostname()
+		}
+		return shield.ShieldEvent{
+			Scope:    shield.ScopeNetworkEgress,
+			ToolName: tc.Name,
+			ToolArgs: tc.Arguments,
+			URL:      urlStr,
+			Domain:   hostname,
+		}
+	case "install_skill":
+		slug, _ := tc.Arguments["slug"].(string)
+		return shield.ShieldEvent{
+			Scope:     shield.ScopeSkillInstall,
+			ToolName:  tc.Name,
+			ToolArgs:  tc.Arguments,
+			SkillName: slug,
+		}
+	default:
+		return shield.ShieldEvent{
+			Scope:    shield.ScopeToolCall,
+			ToolName: tc.Name,
+			ToolArgs: tc.Arguments,
+		}
+	}
 }
 
 func mapCommandError(result commands.ExecuteResult) string {
