@@ -47,6 +47,16 @@ type AgentInstance struct {
 	// was successfully resolved. It scores each incoming message and decides
 	// whether to route to LightCandidates or stay with Candidates.
 	Router *routing.Router
+
+	// RouterV2 is the 4-tier router (TinyClaw style). When non-nil and TierCandidates
+	// is populated, the agent uses 4-tier routing (simple/moderate/complex/reasoning).
+	RouterV2 *routing.RouterV2
+
+	// TierCandidates holds the resolved provider candidates for each tier.
+	// Pre-computed at agent creation to avoid repeated model_list lookups at runtime.
+	// When this is populated, RouterV2 is used instead of Router.
+	TierCandidates map[routing.QueryTier][]providers.FallbackCandidate
+
 	// LightCandidates holds the resolved provider candidates for the light model.
 	// Pre-computed at agent creation to avoid repeated model_list lookups at runtime.
 	LightCandidates []providers.FallbackCandidate
@@ -216,22 +226,71 @@ func NewAgentInstance(
 
 	candidates := providers.ResolveCandidatesWithLookup(modelCfg, defaults.Provider, resolveFromModelList)
 
-	// Model routing setup: pre-resolve light model candidates at creation time
+	// Model routing setup: pre-resolve model candidates at creation time
 	// to avoid repeated model_list lookups on every incoming message.
 	var router *routing.Router
+	var routerV2 *routing.RouterV2
 	var lightCandidates []providers.FallbackCandidate
-	if rc := defaults.Routing; rc != nil && rc.Enabled && rc.LightModel != "" {
-		lightModelCfg := providers.ModelConfig{Primary: rc.LightModel}
-		resolved := providers.ResolveCandidatesWithLookup(lightModelCfg, defaults.Provider, resolveFromModelList)
-		if len(resolved) > 0 {
-			router = routing.New(routing.RouterConfig{
-				LightModel: rc.LightModel,
-				Threshold:  rc.Threshold,
-			})
-			lightCandidates = resolved
-		} else {
-			log.Printf("routing: light_model %q not found in model_list — routing disabled for agent %q",
-				rc.LightModel, agentID)
+	var tierCandidates map[routing.QueryTier][]providers.FallbackCandidate
+
+	rc := defaults.Routing
+	if rc != nil && rc.Enabled {
+		// V2 4-tier routing (TinyClaw style) when tier_mapping is configured
+		if len(rc.TierMapping) > 0 {
+			tierCandidates = make(map[routing.QueryTier][]providers.FallbackCandidate)
+			tierMapping := make(routing.TierModelMapping)
+			allTiersFailed := true
+
+			for tierStr, modelName := range rc.TierMapping {
+				tier, ok := routing.TryParseTier(tierStr)
+				if !ok {
+					log.Printf("routing: unknown tier key %q in tier_mapping — skipping (expected simple|moderate|complex|reasoning)", tierStr)
+					continue
+				}
+
+				tierCfg := providers.ModelConfig{Primary: modelName}
+				resolved := providers.ResolveCandidatesWithLookup(tierCfg, defaults.Provider, resolveFromModelList)
+				if len(resolved) > 0 {
+					tierCandidates[tier] = resolved
+					tierMapping[tier] = modelName
+					allTiersFailed = false
+				} else {
+					log.Printf("routing: tier %q model %q not found in model_list — tier disabled", tierStr, modelName)
+				}
+			}
+
+			if !allTiersFailed && len(tierMapping) > 0 {
+				routerV2 = routing.NewV2(routing.RouterConfigV2{
+					TierMapping:    tierMapping,
+					TierBoundaries: convertTierBoundaries(rc.TierBoundaries),
+				})
+				var have, miss []string
+				for _, t := range routing.AllTiers() {
+					if _, ok := tierMapping[t]; ok {
+						have = append(have, string(t))
+					} else {
+						miss = append(miss, string(t))
+					}
+				}
+				log.Printf("routing: V2 4-tier routing enabled for agent %q (%d tiers mapped: %v; unmapped: %v)",
+					agentID, len(tierMapping), have, miss)
+			} else {
+				log.Printf("routing: tier_mapping configured but no tiers resolved — routing disabled for agent %q", agentID)
+			}
+		} else if rc.LightModel != "" {
+			// Legacy 2-tier routing
+			lightModelCfg := providers.ModelConfig{Primary: rc.LightModel}
+			resolved := providers.ResolveCandidatesWithLookup(lightModelCfg, defaults.Provider, resolveFromModelList)
+			if len(resolved) > 0 {
+				router = routing.New(routing.RouterConfig{
+					LightModel: rc.LightModel,
+					Threshold:  rc.Threshold,
+				})
+				lightCandidates = resolved
+			} else {
+				log.Printf("routing: light_model %q not found in model_list — routing disabled for agent %q",
+					rc.LightModel, agentID)
+			}
 		}
 	}
 
@@ -327,6 +386,8 @@ func NewAgentInstance(
 		SkillsFilter:                 skillsFilter,
 		Candidates:                   candidates,
 		Router:                       router,
+		RouterV2:                     routerV2,
+		TierCandidates:               tierCandidates,
 		LightCandidates:              lightCandidates,
 		Compactor:                    compactorEngine,
 		CompactorTriggerTokenPercent: triggerPct,
@@ -409,6 +470,40 @@ func (a *AgentInstance) Close() error {
 		return fmt.Errorf("close errors: %v", errs)
 	}
 	return nil
+}
+
+// convertTierBoundaries converts config.TierBoundariesConfig to routing tier boundaries.
+// Returns nil if the config is nil or no cutpoint field was set.
+// Invalid cutpoints (not strictly increasing within [-1,1]) log a warning and yield nil.
+func convertTierBoundaries(cfg *config.TierBoundariesConfig) map[routing.QueryTier]routing.TierBoundary {
+	if cfg == nil || !cfg.HasCustomBoundaries() {
+		return nil
+	}
+
+	sm := -0.05
+	if cfg.SimpleModerate != nil {
+		sm = *cfg.SimpleModerate
+	}
+	mc := 0.15
+	if cfg.ModerateComplex != nil {
+		mc = *cfg.ModerateComplex
+	}
+	cr := 0.35
+	if cfg.ComplexReasoning != nil {
+		cr = *cfg.ComplexReasoning
+	}
+
+	if err := routing.ValidateTierCutpoints(sm, mc, cr); err != nil {
+		log.Printf("routing: invalid tier_boundaries: %v — using default boundaries", err)
+		return nil
+	}
+
+	return map[routing.QueryTier]routing.TierBoundary{
+		routing.TierSimple:    {Min: -1.0, Max: sm},
+		routing.TierModerate:  {Min: sm, Max: mc},
+		routing.TierComplex:   {Min: mc, Max: cr},
+		routing.TierReasoning: {Min: cr, Max: 1.0},
+	}
 }
 
 // initSessionStore creates the session persistence backend.

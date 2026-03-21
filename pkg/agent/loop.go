@@ -1640,11 +1640,42 @@ func (al *AgentLoop) runLLMIteration(
 // The returned (candidates, model) pair is used for all LLM calls within one
 // turn — tool follow-up iterations use the same tier as the initial call so
 // that a multi-step tool chain doesn't switch models mid-way.
+//
+// V2 4-tier routing (TinyClaw style):
+// When agent.RouterV2 is configured and TierCandidates is populated, uses 4-tier
+// routing (simple/moderate/complex/reasoning) instead of 2-tier (light/heavy).
 func (al *AgentLoop) selectCandidates(
 	agent *AgentInstance,
 	userMsg string,
 	history []providers.Message,
 ) (candidates []providers.FallbackCandidate, model string) {
+	// V2 4-tier routing (TinyClaw style)
+	if agent.RouterV2 != nil && agent.RouterV2.IsV2Enabled() && len(agent.TierCandidates) > 0 {
+		selectedModel, tier, result := agent.RouterV2.SelectModel(userMsg, history, agent.Model)
+
+		// Get candidates for the selected tier
+		if tierCandidates, ok := agent.TierCandidates[tier]; ok && len(tierCandidates) > 0 {
+			logger.InfoCF("agent", "Model routing: tier selected",
+				map[string]any{
+					"agent_id":   agent.ID,
+					"tier":       tier.String(),
+					"model":      selectedModel,
+					"score":      result.Score,
+					"confidence": result.Confidence,
+				})
+			return tierCandidates, selectedModel
+		}
+
+		// Fallback to primary candidates if tier not found
+		logger.WarnCF("agent", "Model routing: tier candidates not found, using primary",
+			map[string]any{
+				"agent_id": agent.ID,
+				"tier":     tier.String(),
+			})
+		return agent.Candidates, selectedModel
+	}
+
+	// Legacy 2-tier routing
 	if agent.Router == nil || len(agent.LightCandidates) == 0 {
 		return agent.Candidates, agent.Model
 	}
