@@ -1,11 +1,11 @@
 # MoonHub
 
 > [!NOTE]
-> **基于声明 (Based On)**
+> **Based On**
 >
-> 本项目基于 [TinyClaw](https://github.com/wgtechlabs/tinyclaw) 的诸多特性与 [PicoClaw](https://github.com/sipeed/picoclaw) 的轻量化设计融合更改，并将在本项目上发展独有功能。本项目遵循 GPL-3.0 许可证。
+> This project is based on features from [TinyClaw](https://github.com/wgtechlabs/tinyclaw) and the lightweight design of [PicoClaw](https://github.com/sipeed/picoclaw), with unique features developed for this project. Licensed under GPL-3.0.
 
-**文档索引与阅读顺序**（插件 / 学习 / 压缩器 / 记忆等）：[`docs/README.md`](docs/README.md)。
+**Documentation Index** (plugins / learning / compactor / memory, etc.): [`docs/README.md`](docs/README.md).
 
 ## Features
 
@@ -15,31 +15,67 @@
 - **Self-Improving** — Behavioral pattern detection system that learns from user feedback, tracks tool usage preferences, and evolves patterns over time.
 - **Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.
 - **Context Compactor** — 4-layer context compaction pipeline (rules, dedup, LLM summary, L0/L1/L2 tiers) integrated in the agent loop; see [`docs/implementation/compactor-status.md`](docs/implementation/compactor-status.md) and [`pkg/compactor/docs/`](pkg/compactor/docs/README.md).
+- **SHIELD.md Anti-Malware** — Runtime threat evaluation engine with YAML threat parsing, pattern matching, approval workflow, and 8 built-in threats; see [`docs/implementation/shield-status.md`](docs/implementation/shield-status.md) and [`pkg/shield/docs/`](pkg/shield/docs/README.md).
 
 ### Planned
 
 - ~~**Self-Improving** — Behavioral pattern detection that makes the agent better with every interaction. It grows with you.~~ → **Implemented**
 - ~~**Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.~~ → **Implemented**
 - ~~**Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.~~ → **Implemented**
+- ~~**SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.~~ → **Implemented**
 - **Smart Routing** — 8-dimension query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.
-- **SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.
 - **Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.
 - **Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.
 
 ## Changelog
 
 <details>
+<summary><strong>2026-03-21 — SHIELD.md Anti-Malware Implementation</strong></summary>
+
+#### New Features
+
+**SHIELD.md Anti-Malware System** (`pkg/shield/`)
+
+A runtime threat evaluation engine inspired by TinyClaw design:
+
+- **Threat Parser** — YAML-formatted SHIELD.md parser with support for threat definitions, directives, and metadata
+- **Pattern Matcher** — Condition syntax support for tool calls, file paths, network egress, skill operations
+- **Enforcement Actions** — Three action types: `block`, `require_approval`, `log` with priority-based resolution
+- **Approval Workflow** — `/approve` and `/reject` commands for user-confirmed actions with 5-minute timeout
+- **Tool Integration** — Shield evaluation integrated into `web_fetch` and `install_skill` tools
+- **Default Threats** — 8 built-in threats covering SQL injection, command injection, path traversal, credential access, etc.
+
+#### Technical Details
+
+- Confidence threshold (0.85) with severity override for critical threats
+- Action priority: `block` > `require_approval` > `log`
+- Context-based approval bypass to prevent double-evaluation
+- Comprehensive unit tests (31 tests, 100% pass rate)
+
+#### Files Changed
+
+- `pkg/shield/` — New package (11 core files + 5 test files)
+- `pkg/agent/instance.go` — Shield and ApprovalManager initialization
+- `pkg/agent/loop.go` — Shield evaluation in tool execution flow
+- `pkg/commands/cmd_approve.go` — Approve/reject command handlers
+- `pkg/tools/web.go` — Shield integration for network egress
+- `pkg/tools/skills_install.go` — Shield integration for skill installation
+- `docs/implementation/shield-status.md` — Implementation status
+
+</details>
+
+<details>
 <summary><strong>2026-03-20 — Context Compactor &amp; documentation flow</strong></summary>
 
 #### Features
 
-- **Context Compactor** (`pkg/compactor/`) — 四层管道（规则预压缩、去重、LLM 摘要、L0/L1/L2 分层）已接入 Agent；配置见 `compactor` 与 [`pkg/compactor/docs/CONFIG.md`](pkg/compactor/docs/CONFIG.md)。
+- **Context Compactor** (`pkg/compactor/`) — Four-layer pipeline (rule-based pre-compression, deduplication, LLM summary, L0/L1/L2 tiers) integrated into Agent; see `compactor` config and [`pkg/compactor/docs/CONFIG.md`](pkg/compactor/docs/CONFIG.md).
 
 #### Documentation
 
-- 新增仓库文档入口 [`docs/README.md`](docs/README.md)，与 `pkg/learning/docs` 一致区分「包内 docs」与 `docs/implementation/*-status.md`。
-- 新增 [`pkg/compactor/docs/`](pkg/compactor/docs/README.md)（README + CONFIG）。
-- 修正指向 `plugin-architecture-status.md` 的链接为实际文件 [`docs/implementation/plugin-status.md`](docs/implementation/plugin-status.md)。
+- Added repository documentation entry [`docs/README.md`](docs/README.md), distinguishing "package docs" from `docs/implementation/*-status.md` consistent with `pkg/learning/docs`.
+- Added [`pkg/compactor/docs/`](pkg/compactor/docs/README.md) (README + CONFIG).
+- Fixed link to `plugin-architecture-status.md` pointing to actual file [`docs/implementation/plugin-status.md`](docs/implementation/plugin-status.md).
 
 </details>
 

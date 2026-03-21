@@ -1,35 +1,35 @@
-# 内置插件索引
+# Built-in Plugin Index
 
-路径均为 `pkg/plugins/.../plugin.go`（包名一般为目录名，如 `telegram`、`openai_compat`）。
+Paths are `pkg/plugins/.../plugin.go` (package name is typically the directory name, e.g., `telegram`, `openai_compat`).
 
-## Channel（16）
+## Channel (17)
 
-| 目录 | 用途 |
-|------|------|
+| Directory | Purpose |
+|-----------|---------|
 | `channels/telegram` | Telegram |
 | `channels/discord` | Discord |
 | `channels/slack` | Slack |
 | `channels/matrix` | Matrix |
-| `channels/feishu` | 飞书 |
+| `channels/feishu` | Feishu (Lark) |
 | `channels/qq` | QQ |
-| `channels/dingtalk` | 钉钉 |
+| `channels/dingtalk` | DingTalk |
 | `channels/line` | LINE |
 | `channels/onebot` | OneBot |
-| `channels/wecom` | 企业微信 |
-| `channels/wecom_app` | 企业微信应用 |
-| `channels/wecom_aibot` | 企业微信 AI Bot |
+| `channels/wecom` | WeCom (Enterprise WeChat) |
+| `channels/wecom_app` | WeCom App |
+| `channels/wecom_aibot` | WeCom AI Bot |
 | `channels/pico` | Pico |
 | `channels/irc` | IRC |
 | `channels/maixcam` | MaixCam |
-| `channels/whatsapp` | WhatsApp（桥接） |
+| `channels/whatsapp` | WhatsApp (Bridge) |
 | `channels/whatsapp_native` | WhatsApp Native |
 
-## Provider（8）
+## Provider (8)
 
-| 目录 | 说明 |
-|------|------|
-| `providers/openai_compat` | OpenAI 兼容 HTTP 等多协议 |
-| `providers/openai_oauth` | OpenAI OAuth 等场景 |
+| Directory | Description |
+|-----------|-------------|
+| `providers/openai_compat` | OpenAI-compatible HTTP and multi-protocol |
+| `providers/openai_oauth` | OpenAI OAuth scenarios |
 | `providers/anthropic` | Anthropic |
 | `providers/anthropic_messages` | Anthropic Messages |
 | `providers/antigravity` | Antigravity |
@@ -37,11 +37,11 @@
 | `providers/codex_cli` | Codex CLI |
 | `providers/github_copilot` | GitHub Copilot |
 
-## Tool（2）
+## Tool (2)
 
-| 目录 | 说明 |
-|------|------|
-| `tools/web` | Web 搜索 / 抓取等 |
-| `tools/message` | Message 工具 |
+| Directory | Description |
+|-----------|-------------|
+| `tools/web` | Web search / fetch etc. |
+| `tools/message` | Message tool |
 
-> 若本文件与仓库不同步，以 `pkg/plugins` 下实际目录为准，并同步更新 `helpers.go` 中的 blank import。
+> If this file is out of sync with the repository, refer to actual directories under `pkg/plugins` and update blank imports in `helpers.go` accordingly.

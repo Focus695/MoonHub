@@ -1,32 +1,31 @@
-# 与 MoonHub 主程序的集成
+# Integration with MoonHub Main Program
 
-## 入口：`cmd/moonhub/internal/gateway/helpers.go`
+## Entry Point: `cmd/moonhub/internal/gateway/helpers.go`
 
 1. **Provider**
-  - 启动早期调用 `providers.SetPluginProviderResolver(...)`。  
-  - Resolver 遍历 `plugin.GlobalRegistry().GetProviderPlugins()`，按 `SupportsProtocol` + `CreateProviderFromModelConfig` 尝试创建；`providers.ErrSkipProvider` 表示交给下一个插件或回退内置工厂。  
-  - 详见 `pkg/providers/factory_provider.go`：`CreateProviderFromConfig` 在 resolver 报错时**仅**在 `ErrSkipProvider` 时回退内置实现。
+   - Early startup calls `providers.SetPluginProviderResolver(...)`.
+   - Resolver iterates `plugin.GlobalRegistry().GetProviderPlugins()`, tries creation via `SupportsProtocol` + `CreateProviderFromModelConfig`; `providers.ErrSkipProvider` means pass to next plugin or fallback to built-in factory.
+   - See `pkg/providers/factory_provider.go`: `CreateProviderFromConfig` falls back to built-in implementation **only** when resolver returns `ErrSkipProvider`.
+
 2. **Tool**
-  - `plugin.NewManager(cfg, msgBus, nil)` → `InitializeToolsOnly(ctx)`。  
-  - `agent.NewAgentLoopWithPluginTools(..., pluginMgr.ToolRegistry())`：先把插件工具 `MergeFrom` 进各 Agent，再在 `registerSharedTools` 里跳过已由插件提供的 `web_search` / `web_fetch` / `message`。
+   - `plugin.NewManager(cfg, msgBus, nil)` → `InitializeToolsOnly(ctx)`.
+   - `agent.NewAgentLoopWithPluginTools(..., pluginMgr.ToolRegistry())`: first `MergeFrom` plugin tools into each Agent, then skip `web_search` / `web_fetch` / `message` in `registerSharedTools` if already provided by plugin.
+
 3. **Channel**
-  - `channels.Manager` 从 `plugin.GlobalRegistry().GetChannelPlugins()` 取插件，对 `IsEnabled` 为真的调用 `CreateChannel`，结果断言为 `channels.Channel` 后注入 `MediaStore` / `PlaceholderRecorder` / `Owner` 等。
+   - `channels.Manager` retrieves plugins from `plugin.GlobalRegistry().GetChannelPlugins()`, calls `CreateChannel` for those where `IsEnabled` is true, asserts result as `channels.Channel`, then injects `MediaStore` / `PlaceholderRecorder` / `Owner`, etc.
 
-## 循环依赖的处理
+## Handling Circular Dependencies
 
-插件实现会依赖 `pkg/channels/*` 等包，若由 `pkg/framework` 再 import 插件会形成环。因此：
+Plugin implementations depend on `pkg/channels/*` etc.; if `pkg/framework` imports plugins, it would form a cycle. Therefore:
 
-- `**builtin.go` 不 import 任何 `pkg/plugins/...`**。  
-- **Gateway** 通过 `_ "…/pkg/plugins/..."` 触发各包 `init()` 注册。
+- `**builtin.go` does NOT import any `pkg/plugins/...`**.
+- **Gateway** triggers each package's `init()` registration via `_ ".../pkg/plugins/..."`.
 
-## 相关代码索引
+## Related Code Index
 
-
-| Concern   | 主要位置                                                                      |
-| --------- | ------------------------------------------------------------------------- |
-| 插件注册表     | `pkg/framework/registry.go`                                               |
-| Tool 合并   | `pkg/tools/registry.go` — `MergeFrom`                                     |
-| Agent 侧   | `pkg/agent/loop.go` — `NewAgentLoopWithPluginTools`、`registerSharedTools` |
-| Channel 侧 | `pkg/channels/manager.go` — 插件迭代初始化                                       |
-
-
+| Concern | Main Location |
+|---------|---------------|
+| Plugin Registry | `pkg/framework/registry.go` |
+| Tool Merge | `pkg/tools/registry.go` — `MergeFrom` |
+| Agent Side | `pkg/agent/loop.go` — `NewAgentLoopWithPluginTools`, `registerSharedTools` |
+| Channel Side | `pkg/channels/manager.go` — plugin iteration initialization |

@@ -1,22 +1,25 @@
-# MoonHub Learning System 中文适配增强
+# MoonHub Learning System - Chinese Language Support
 
-MoonHub 学习系统现在支持完整的中文反馈识别和学习。
+The MoonHub learning system now supports full Chinese feedback recognition and learning.
 
-**仓库级文档索引**（各子系统阅读顺序）：[docs/README.md](../../../docs/README.md)。
+**Repository Documentation Index** (reading order for subsystems): [docs/README.md](../../../docs/README.md).
 
-## 如述
+## Overview
 
-本文档描述 MoonHub 自我改进学习系统的中文适配增强功能。
+This document describes the Chinese language adaptation features of the MoonHub self-improving learning system.
 
-## 枺核原理
-系统通过以下组件实现中文适配:
-- **i18n 稡块**: 国际化管理器，- **patterns 模块**: 模式管理器
-- **detector**: 騡式检测器
-- **suggester**: 建议生成器
-- **engine**: 上下文构建器
+## Core Components
 
-## 配置
-在 `~/.moonhub/config.json` 中配置语言:
+The system implements Chinese language support through the following components:
+- **i18n module**: Internationalization manager
+- **patterns module**: Pattern manager
+- **detector**: Pattern detector
+- **suggester**: Suggestion generator
+- **engine**: Context builder
+
+## Configuration
+
+Configure the language in `~/.moonhub/config.json`:
 ```json
 {
   "learning": {
@@ -24,28 +27,35 @@ MoonHub 学习系统现在支持完整的中文反馈识别和学习。
   }
 }
 ```
-## 支持的表达
-### 正面反馈
+
+## Supported Expressions
+
+### Positive Feedback (Chinese)
 - "太棒了", "给力", "完美", "靠谱"
 - "牛", "666", "绝了", "稳"
 - "好的", "行", "可以", "没问题"
 - "谢谢", "感谢", "辛苦了"
 - "对", "是的", "没错", "正确"
-### 负面反馈
+
+### Negative Feedback (Chinese)
 - "不对", "错了", "不行", "不可以"
 - "不太对", "不太行", "差点意思"
 - "没帮助", "没用", "无效"
 - "浪费", "没意思", "无语"
-### 纠正/偏好
+
+### Corrections/Preferences (Chinese)
 - "其实...", "我的意思是...", "我更喜欢..."
 - "下次记得...", "不要用..."
 - "用...代替...", "优先使用..."
-### 工作流
+
+### Workflow (Chinese)
 - "每次...", "总是...", "从不..."
 - "先...再...", "当...时"
 - "必须...", "务必..."
-## 示例
-用户说 "太棒了，正是我想要的" → 系统识别为正面反馈
-用户说 "不对,理解错了,我的意思是..." → 系统识别为纠正信号
-用户说 "下次修改代码前先运行测试" → 系统记录工作流偏好
-用户说 "不要用 bash,用 Python" → 系统记录工具禁用偏好
+
+## Examples
+
+User says "太棒了，正是我想要的" → System identifies as positive feedback
+User says "不对,理解错了,我的意思是..." → System identifies as correction signal
+User says "下次修改代码前先运行测试" → System records workflow preference
+User says "不要用 bash,用 Python" → System records tool disable preference

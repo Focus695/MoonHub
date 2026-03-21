@@ -1,28 +1,28 @@
-# 插件框架结构
+# Plugin Framework Architecture
 
-## 核心类型（源码）
+## Core Types (Source)
 
-| 文件 | 内容 |
-|------|------|
-| `types.go` | `Plugin`、`Metadata`、`PluginType`、`RuntimeContext` |
-| `channel.go` | `Channel`、`ChannelPlugin` |
-| `provider.go` | `ProviderPlugin`（含 `CreateProviderFromModelConfig`、`SupportsProtocol` 等） |
+| File | Content |
+|------|---------|
+| `types.go` | `Plugin`, `Metadata`, `PluginType`, `RuntimeContext` |
+| `channel.go` | `Channel`, `ChannelPlugin` |
+| `provider.go` | `ProviderPlugin` (including `CreateProviderFromModelConfig`, `SupportsProtocol`, etc.) |
 | `tool.go` | `ToolPlugin` |
-| `registry.go` | `Registry`、`RegisterPlugin`、`GlobalRegistry`、按类型检索 |
-| `manager.go` | `Manager`：`Initialize`、`InitializeToolsOnly`、按类型 init |
-| `builtin.go` | `LoadBuiltin()` no-op + 注释说明导入位置 |
+| `registry.go` | `Registry`, `RegisterPlugin`, `GlobalRegistry`, type-based retrieval |
+| `manager.go` | `Manager`: `Initialize`, `InitializeToolsOnly`, type-based init |
+| `builtin.go` | `LoadBuiltin()` no-op + comments explaining import location |
 
-## 注册模型
+## Registration Model
 
-- 各插件包在 **`init()`** 中调用 `plugin.RegisterPlugin(...)`。
-- 全局单例通过 **`plugin.GlobalRegistry()`** 访问；内部按 `PluginType` 分 map 存储。
-- **顺序**：Gateway 启动时通过 import 侧保证各插件 `init` 已执行，再读 Registry。
+- Each plugin package calls `plugin.RegisterPlugin(...)` in **`init()`**.
+- Global singleton accessed via **`plugin.GlobalRegistry()`**; internally stored by `PluginType` in separate maps.
+- **Order**: Gateway startup ensures all plugin `init` functions have executed via imports before reading Registry.
 
-## Manager 行为摘要
+## Manager Behavior Summary
 
-- **`InitializeToolsOnly`**：仅初始化 Tool 插件并把工具写入内部 `ToolRegistry`。Gateway 当前路径：先工具插件，再构造 AgentLoop（合并工具），Channel 仍由 `channels.Manager` 基于 Registry 启动。
-- **`Initialize`**：工具 → Provider 插件实例 → Channel 插件实例（完整编排；若某入口未使用则不必调用）。
+- **`InitializeToolsOnly`**: Only initializes Tool plugins and writes tools to internal `ToolRegistry`. Current Gateway path: tool plugins first, then construct AgentLoop (merge tools), Channels still started by `channels.Manager` based on Registry.
+- **`Initialize`**: Tools → Provider plugin instances → Channel plugin instances (full orchestration; call only if needed by entry point).
 
 ## RuntimeContext
 
-创建 `Manager` 时注入：`Config`、`MessageBus`、可选 `MediaStore`。Tool / Provider / Channel 的 `Init(ctx *RuntimeContext)` 在此上下文中运行。
+Injected when creating `Manager`: `Config`, `MessageBus`, optional `MediaStore`. Tool / Provider / Channel `Init(ctx *RuntimeContext)` runs within this context.

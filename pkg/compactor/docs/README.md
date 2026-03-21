@@ -1,37 +1,37 @@
-# MoonHub Context Compactor（`pkg/compactor`）
+# MoonHub Context Compactor (`pkg/compactor`)
 
-四层上下文压缩管道：规则预压缩 → 去重 → LLM 摘要 → 分层摘要（L0/L1/L2）。与 Agent 会话历史、Token 预算及 SQLite 持久化配合工作。
+Four-layer context compression pipeline: rule-based pre-compression → deduplication → LLM summary → tiered summaries (L0/L1/L2). Works with Agent conversation history, token budget, and SQLite persistence.
 
-## 建议阅读顺序（文档流）
+## Recommended Reading Order (Documentation Flow)
 
-1. **本文** — 职责边界与源码地图  
-2. [CONFIG.md](./CONFIG.md) — `config.json` / 环境变量与默认值  
-3. 实现细节与集成 — [`docs/implementation/compactor-status.md`](../../../docs/implementation/compactor-status.md)（架构表、表结构、`instance.go` / `loop.go` 钩子、测试命令）
+1. **This document** — Responsibility boundaries and source map
+2. [CONFIG.md](./CONFIG.md) — `config.json` / environment variables and defaults
+3. Implementation details and integration — [`docs/implementation/compactor-status.md`](../../../docs/implementation/compactor-status.md) (architecture table, table structure, `instance.go` / `loop.go` hooks, test commands)
 
-## 源码地图（与实现对齐）
+## Source Map (Aligned with Implementation)
 
 ```
 pkg/compactor/
-├── compactor.go   # 主编排、CompactorEngine
-├── config.go      # 运行时 Config（由 pkg/config 映射传入）
-├── rules.go       # Layer 1：规则预压缩
-├── dedup.go       # Layer 2：Shingle + Jaccard 去重
-├── tiers.go       # Layer 4：分层摘要与层级选择
-├── store.go       # SQLite：分层摘要与压缩状态
-└── tokens.go      # Token 估算与辅助
+├── compactor.go   # Main orchestration, CompactorEngine
+├── config.go      # Runtime Config (mapped from pkg/config)
+├── rules.go       # Layer 1: Rule-based pre-compression
+├── dedup.go       # Layer 2: Shingle + Jaccard deduplication
+├── tiers.go       # Layer 4: Tiered summaries and tier selection
+├── store.go       # SQLite: tiered summaries and compression state
+└── tokens.go      # Token estimation and helpers
 ```
 
-测试：`go test ./pkg/compactor/...`（详见实现状态文档中的覆盖说明）。
+Testing: `go test ./pkg/compactor/...` (see coverage details in implementation status document).
 
-## 相关代码（集成点）
+## Related Code (Integration Points)
 
-| 区域 | 路径 | 说明 |
-|------|------|------|
-| 全局配置类型 | `pkg/config/config.go`（`CompactorConfig`） | 用户可见配置与 env 标签 |
-| 默认值 | `pkg/config/defaults.go` | `DefaultCompactorConfig()` |
-| Agent 持有与初始化 | `pkg/agent/instance.go` | `Compactor`、`CompactorTriggerTokenPercent` |
-| 触发与分层注入 | `pkg/agent/loop.go` | `maybeCompact`、`getTieredSummary` 等 |
+| Area | Path | Description |
+|------|------|-------------|
+| Global Config Type | `pkg/config/config.go` (`CompactorConfig`) | User-visible config and env tags |
+| Defaults | `pkg/config/defaults.go` | `DefaultCompactorConfig()` |
+| Agent Holder & Initialization | `pkg/agent/instance.go` | `Compactor`, `CompactorTriggerTokenPercent` |
+| Trigger & Tiered Injection | `pkg/agent/loop.go` | `maybeCompact`, `getTieredSummary`, etc. |
 
-## 与 learning 文档风格的对齐
+## Alignment with learning Documentation Style
 
-本目录与 [`pkg/learning/docs`](../learning/docs/README.md) 采用相同习惯：**包内 `docs/` 放「怎么配、从哪读代码」**，**仓库级 `docs/implementation/*-status.md` 放「设计、表结构、集成清单与测试」**，便于在后续开发与 PR 中分工维护。
+This directory follows the same convention as [`pkg/learning/docs`](../learning/docs/README.md): **package-level `docs/` contains "how to configure, where to read code"**, **repository-level `docs/implementation/*-status.md` contains "design, table structure, integration checklist and testing"**, facilitating future development and PR division of labor.

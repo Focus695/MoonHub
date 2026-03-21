@@ -1,9 +1,14 @@
-# MoonHub Learning System 配置
-本文档描述 MoonHub 学习系统的配置选项。
-## 如述
-学习系统支持多种配置选项来自定义行为。
-## 配置结构
-在 `~/.moonhub/config.json` 中配置学习系统:
+# MoonHub Learning System Configuration
+
+This document describes the configuration options for the MoonHub learning system.
+
+## Overview
+
+The learning system supports various configuration options to customize behavior.
+
+## Configuration Structure
+
+Configure the learning system in `~/.moonhub/config.json`:
 ```json
 {
   "learning": {
@@ -23,37 +28,53 @@
   }
 }
 ```
-## 配置选项说明
+
+## Configuration Options
+
 ### language
-- `auto` - 自动检测语言（默认)
-- `en` - 仅使用英文模式
-- `zh` - 仅使用中文模式
+- `auto` - Auto-detect language (default)
+- `en` - Use English mode only
+- `zh` - Use Chinese mode only
+
 ### db_path
-学习数据库存储路径，默认为 `memory/learning.db`
+Learning database storage path, defaults to `memory/learning.db`
+
 ### min_confidence
-模式置信度阈值，低于此值的模式将被忽略, 默认 0.7
+Pattern confidence threshold; patterns below this value will be ignored, default 0.7
+
 ### max_examples
-每个模式保留的最大示例数量, 默认 10
+Maximum number of examples to retain per pattern, default 10
+
 ### enable_semantic_detection
-是否启用语义关键词检测, 默认 true
+Enable semantic keyword detection, default true
+
 ### enable_implicit_signals
-是否从工具使用中推断隐式信号, 默认 true
+Infer implicit signals from tool usage, default true
+
 ### enable_behavioral_scoring
-是否启用行为评分系统, 默认 true
+Enable behavioral scoring system, default true
+
 ### enable_pattern_evolution
-是否启用模式演化(合并/修剪/衰减), 默认 false
+Enable pattern evolution (merge/prune/decay), default false
+
 ### enable_contradiction_detection
-是否检测矛盾的模式, 默认 false
+Detect contradictory patterns, default false
+
 ### enable_suggestions
-是否生成主动建议, 默认 false
+Generate proactive suggestions, default false
+
 ### decay_older_than_days
-模式衰减天数, 默认 7 天
+Pattern decay period in days, default 7 days
+
 ### prune_older_than_days
-模式修剪天数, 默认 30 天
+Pattern pruning period in days, default 30 days
+
 ### merge_similarity_threshold
-模式合并相似度阈值, 默认 0.8
-## 使用示例
-### 中文模式配置
+Pattern merge similarity threshold, default 0.8
+
+## Usage Examples
+
+### Chinese Mode Configuration
 ```json
 {
   "learning": {
@@ -61,7 +82,8 @@
   }
 }
 ```
-### 英文模式配置
+
+### English Mode Configuration
 ```json
 {
   "learning": {
@@ -69,7 +91,8 @@
   }
 }
 ```
-### 宷式化配置
+
+### Customized Configuration
 ```json
 {
   "learning": {
@@ -79,7 +102,8 @@
   }
 }
 ```
-## 注意事项
-- 配置更改需要重启服务才能生效
-- `db_path` 目录需要写入权限
-- 高级功能(演化、矛盾检测)可能影响性能
+
+## Notes
+- Configuration changes require service restart to take effect
+- `db_path` directory requires write permissions
+- Advanced features (evolution, contradiction detection) may affect performance

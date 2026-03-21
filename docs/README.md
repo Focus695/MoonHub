@@ -1,73 +1,72 @@
-# MoonHub 文档索引
+# MoonHub Documentation Index
 
-本页是仓库文档的**入口与阅读顺序**
+This page is the **entry point and reading guide** for the repository documentation.
 
-## 建议阅读顺序（第一次接触本仓库）
+## Recommended Reading Order (First Time)
 
-1. [仓库根 README](../README.md) — 功能概览、许可证与近期变更摘要
-2. [故障排查](./troubleshooting.md)、[调试说明](./debug.md) — 运行期问题按需查阅
-3. [工具与能力配置](./tools_configuration.md) — 工具侧配置
+1. [Repository Root README](../README.md) — Feature overview, license, and recent changelog summary
+2. [Troubleshooting](./troubleshooting.md), [Debug Guide](./debug.md) — Runtime issues reference
+3. [Tools & Capabilities Configuration](./tools_configuration.md) — Tool-side configuration
 
-## 按子系统的文档流
+## Documentation Flow by Subsystem
 
-### 插件架构（Channel / Provider / Tool）
+### Plugin Architecture (Channel / Provider / Tool)
 
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/framework/docs/README.md`](../pkg/framework/docs/README.md) | Framework positioning, package names, and import conventions |
+| 2 | [`pkg/framework/docs/ARCHITECTURE.md`](../pkg/framework/docs/ARCHITECTURE.md) | Interfaces, Registry, lifecycle |
+| 3 | [`pkg/framework/docs/INTEGRATION.md`](../pkg/framework/docs/INTEGRATION.md) | Integration with Gateway, agent, and subsystems |
+| 4 | [`pkg/plugins/docs/README.md`](../pkg/plugins/docs/README.md) | Built-in plugin directory conventions |
+| 5 | [`pkg/plugins/docs/PLUGIN_INDEX.md`](../pkg/plugins/docs/PLUGIN_INDEX.md) | Plugin list and paths |
+| 6 | [`pkg/plugins/docs/ADDING_A_PLUGIN.md`](../pkg/plugins/docs/ADDING_A_PLUGIN.md) | Steps to add or migrate plugins |
+| Status | [`docs/implementation/plugin-status.md`](./implementation/plugin-status.md) | Design decisions and implementation progress |
 
-| 顺序  | 文档                                                                              | 说明                      |
-| --- | ------------------------------------------------------------------------------- | ----------------------- |
-| 1   | `[pkg/framework/docs/README.md](../pkg/framework/docs/README.md)`               | 框架定位、包名与导入约定            |
-| 2   | `[pkg/framework/docs/ARCHITECTURE.md](../pkg/framework/docs/ARCHITECTURE.md)`   | 接口、Registry、生命周期        |
-| 3   | `[pkg/framework/docs/INTEGRATION.md](../pkg/framework/docs/INTEGRATION.md)`     | 与 Gateway、agent、各子系统的对接 |
-| 4   | `[pkg/plugins/docs/README.md](../pkg/plugins/docs/README.md)`                   | 内置插件目录约定                |
-| 5   | `[pkg/plugins/docs/PLUGIN_INDEX.md](../pkg/plugins/docs/PLUGIN_INDEX.md)`       | 插件清单与路径                 |
-| 6   | `[pkg/plugins/docs/ADDING_A_PLUGIN.md](../pkg/plugins/docs/ADDING_A_PLUGIN.md)` | 新增或迁移插件的步骤              |
-| 状态  | `[docs/implementation/plugin-status.md](./implementation/plugin-status.md)`     | 设计决策与实现进度               |
+### Self-Improving System
 
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/learning/docs/README.md`](../pkg/learning/docs/README.md) | Feedback and capability overview |
+| 2 | [`pkg/learning/docs/CONFIG.md`](../pkg/learning/docs/CONFIG.md) | `learning` configuration options |
+| 3 | [`pkg/learning/docs/I18N.md`](../pkg/learning/docs/I18N.md) | Language and detection behavior |
+| 4 | [`pkg/learning/docs/EXAMPLES.md`](../pkg/learning/docs/EXAMPLES.md), [`SupportedPatterns.md`](../pkg/learning/docs/SupportedPatterns.md) | Examples and pattern tables |
+| Status | [`docs/implementation/learning-status.md`](./implementation/learning-status.md) | Implementation status and integration points |
 
-### 学习系统（Self-Improving）
+### Context Compactor
 
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/compactor/docs/README.md`](../pkg/compactor/docs/README.md) | Four-layer pipeline and code entry points |
+| 2 | [`pkg/compactor/docs/CONFIG.md`](../pkg/compactor/docs/CONFIG.md) | `compactor` configuration and environment variables |
+| Status | [`docs/implementation/compactor-status.md`](./implementation/compactor-status.md) | Architecture, storage, agent integration, and test commands |
 
-| 顺序  | 文档                                                                                                                                      | 说明             |
-| --- | --------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
-| 1   | `[pkg/learning/docs/README.md](../pkg/learning/docs/README.md)`                                                                         | 中文反馈与能力概述      |
-| 2   | `[pkg/learning/docs/CONFIG.md](../pkg/learning/docs/CONFIG.md)`                                                                         | `learning` 配置项 |
-| 3   | `[pkg/learning/docs/I18N.md](../pkg/learning/docs/I18N.md)`                                                                             | 语言与检测行为        |
-| 4   | `[pkg/learning/docs/EXAMPLES.md](../pkg/learning/docs/EXAMPLES.md)`、`[SupportedPatterns.md](../pkg/learning/docs/SupportedPatterns.md)` | 示例与模式表         |
-| 状态  | `[docs/implementation/learning-status.md](./implementation/learning-status.md)`                                                         | 实现状态与集成点       |
+### SHIELD Runtime Security (`pkg/shield`)
 
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/shield/docs/README.md`](../pkg/shield/docs/README.md) | Responsibilities, source map, and integration entry |
+| 2 | [`pkg/shield/docs/SHIELD_MD.md`](../pkg/shield/docs/SHIELD_MD.md) | `SHIELD.md` YAML, conditional DSL, confidence semantics |
+| 3 | [`pkg/shield/docs/EXAMPLES.md`](../pkg/shield/docs/EXAMPLES.md) | Workspace policy examples and approval commands |
+| Status | [`docs/implementation/shield-status.md`](./implementation/shield-status.md) | Design, built-in threat tables, integration checklist, and tests |
 
-### 上下文压缩（Context Compactor）
+### Adaptive Memory
 
+| Document | Description |
+| --- | --- |
+| [`docs/implementation/memory-status.md`](./implementation/memory-status.md) | Package structure, capabilities, configuration, and integration notes; source in `pkg/adaptive_memory/` |
 
-| 顺序  | 文档                                                                                | 说明                  |
-| --- | --------------------------------------------------------------------------------- | ------------------- |
-| 1   | `[pkg/compactor/docs/README.md](../pkg/compactor/docs/README.md)`                 | 四层管道与代码入口           |
-| 2   | `[pkg/compactor/docs/CONFIG.md](../pkg/compactor/docs/CONFIG.md)`                 | `compactor` 配置与环境变量 |
-| 状态  | `[docs/implementation/compactor-status.md](./implementation/compactor-status.md)` | 架构、存储、Agent 集成与测试命令 |
+### Channels
 
-
-### 自适应记忆（Adaptive Memory）
-
-
-| 文档                                                                          | 说明                                        |
-| --------------------------------------------------------------------------- | ----------------------------------------- |
-| `[docs/implementation/memory-status.md](./implementation/memory-status.md)` | 包结构、能力、配置与集成说明；源码在 `pkg/adaptive_memory/` |
-
-
-### 各通道（Channels）
-
-`[docs/channels/](./channels/)` 下为各通道的说明（含部分中文 README）。
+[`docs/channels/`](./channels/) contains documentation for each channel.
 
 ---
 
-## `docs/implementation/` 一览
+## `docs/implementation/` Overview
 
-
-| 文件                                                            | 主题         |
-| ------------------------------------------------------------- | ---------- |
-| `[plugin-status.md](./implementation/plugin-status.md)`       | 插件架构实现状态   |
-| `[learning-status.md](./implementation/learning-status.md)`   | 学习系统实现状态   |
-| `[compactor-status.md](./implementation/compactor-status.md)` | 上下文压缩器实现状态 |
-| `[memory-status.md](./implementation/memory-status.md)`       | 记忆系统实现状态   |
-
-
+| File | Topic |
+| --- | --- |
+| [`plugin-status.md`](./implementation/plugin-status.md) | Plugin architecture implementation status |
+| [`learning-status.md`](./implementation/learning-status.md) | Self-improving system implementation status |
+| [`compactor-status.md`](./implementation/compactor-status.md) | Context compactor implementation status |
+| [`shield-status.md`](./implementation/shield-status.md) | SHIELD runtime security implementation status |
+| [`memory-status.md`](./implementation/memory-status.md) | Memory system implementation status |
