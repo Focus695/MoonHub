@@ -7,63 +7,63 @@
 
 **Documentation Index** (plugins, learning, compactor, SHIELD, memory, delegation, etc.): [`docs/README.md`](docs/README.md).
 
-**[中文文档](README_CN.md)**
+**[English](README.md)**
 
-## Introduction
+## 简介
 
 > **A ready-to-use agent that's perfect for everyday users.**
 
-MoonHub is a **local-first AI assistant** designed for edge computing — Simple, Fast, Secure.
+MoonHub 是一款面向边缘计算的**本地优先 AI 助手**——简单、快速、安全。
 
-We believe AI shouldn't be the exclusive tool of tech experts. MoonHub is built for **everyday users** — no technical background required, just plug and play. Currently adapted for Linux, it runs perfectly on Raspberry Pi, industrial gateways, and various embedded devices.
+我们相信，AI 不应该是少数技术专家的专属工具。MoonHub 专为**日常用户**打造，无需任何技术背景，插电即用。目前适配 Linux 平台，完美运行于树莓派、工业网关等各类嵌入式设备。
 
-### Design Philosophy
+### 设计理念
 
-| Principle | Description |
-|-----------|-------------|
-| **Simple** | Zero learning curve. Works out of the box, as easy as any home appliance. |
-| **Fast** | Ultra-lightweight. <10MB memory, 1-second cold start, millisecond response. |
-| **Secure** | Local-first. Your data never leaves the device — privacy entirely in your hands. |
+| 原则 | 描述 |
+|------|------|
+| **Simple** | 零学习曲线。开箱即用，像使用家用电器一样简单。 |
+| **Fast** | 极致轻量。<10MB 内存，1 秒冷启动，毫秒级响应。 |
+| **Secure** | 本地优先。数据不出设备，隐私完全由你掌控。 |
 
-### Core Features
+### 核心特性
 
-**🤖 Agent Collaboration Engine**
+**🤖 Agent 协作引擎**
 
-You're the commander, and the Agent team serves you. Each Agent has its own responsibilities — they communicate with each other, collaborate proactively, and seek your approval at critical decision points. This isn't a simple Q&A bot, but an intelligent team that truly understands context and autonomously drives tasks forward.
+你是指挥官，Agent 团队为你服务。每个 Agent 各司其职，它们可以彼此通信、主动协作，在关键决策点向你请示。这不是简单的问答机器人，而是一个真正理解上下文、能自主推进任务的智能团队。
 
-**🎨 Dynamic UI Generation**
+**🎨 动态 UI 生成**
 
-Say goodbye to traditional Agents that "only output text." MoonHub can generate visual interactive interfaces in real-time based on your needs — financial dashboards, task managers, data visualizations — everything adapts on demand. You describe the idea, the Agent builds it for you.
+告别"只能输出文字"的传统 Agent。MoonHub 能够根据你的需求，实时生成可视化交互界面——财务仪表盘、任务管理器、数据看板，一切随需而变。你描述想法，Agent 为你构建。
 
-**📱 Dedicated Application**
+**📱 专属应用**
 
-Users interact with the device through a dedicated app. Currently provided as a **PWA** for quick installation and offline use; native **mobile apps** are coming soon to cover more platforms and use cases.
+用户通过专属应用与设备交互。目前以 **PWA** 形式提供，支持快速安装、离线使用；后续将推出原生 **APP**，覆盖更多平台与使用场景。
 
-### Infinite Possibilities
+### 无限可能
 
-MoonHub runs on any edge device, injecting intelligence into your scenarios. Build your own solutions through secondary development:
+MoonHub 可运行于任何边缘设备，为你的场景注入智能。基于本项目二次开发，打造专属解决方案：
 
-| Scenario | Description |
-|----------|-------------|
-| **Smart Irrigation** | Connect soil moisture and weather sensors. The Agent dynamically adjusts irrigation strategies based on real-time data for precision water-saving agriculture. |
-| **Industrial Monitoring** | Deploy in production workshops for real-time equipment status collection, predictive maintenance alerts, and visualized operation dashboards. |
-| **Smart Retail** | Connect foot traffic counters and inventory sensors to automatically generate restocking suggestions and sales analysis reports for business decisions. |
-| **Energy Management** | Interface with smart meters and solar inverters to optimize power consumption strategies in real-time and generate energy reports. |
-| **Smart CRM** | Integrate customer data and communication records. AI analyzes customer profiles and automatically generates follow-up reminders and sales opportunity insights. |
-| **Intelligent Ops** | Connect server and application monitoring data. AI identifies anomaly patterns, triggers automatic alerts, and generates fault diagnosis reports. |
-| **Smart Security** | Interface with cameras and door/window sensors. AI detects abnormal behaviors, pushes real-time alerts, and generates security logs. |
-| **Smart Aquaculture** | Connect water quality sensors and feeding equipment. Real-time monitoring of aquaculture environment with automatic feeding adjustment and growth analysis reports. |
-| **Smart Classroom** | Connect attendance devices and interactive displays. Automatically record attendance and assist teachers in generating personalized learning reports. |
-| **Smart E-commerce** | Interface with order, inventory, and logistics systems. AI analyzes sales trends and automatically generates restocking suggestions and marketing strategies. |
+| 场景 | 描述 |
+|------|------|
+| **智能灌溉** | 接入土壤湿度、气象传感器，Agent 根据实时数据动态调整灌溉策略，实现精准节水农业。 |
+| **工业监控** | 部署于生产车间，实时采集设备状态，预测性维护告警，生成可视化运维看板。 |
+| **智慧门店** | 连接客流统计、库存传感器，自动生成补货建议、销售分析报告，辅助经营决策。 |
+| **能源管理** | 对接智能电表、光伏逆变器，实时优化用电策略，生成能耗报告与节能建议。 |
+| **智能 CRM** | 集成客户数据、沟通记录，AI 分析客户画像，自动生成跟进提醒与销售机会洞察。 |
+| **智能运维** | 接入服务器、应用监控数据，AI 识别异常模式，自动告警并生成故障诊断报告。 |
+| **智能安防** | 对接摄像头、门窗传感器，AI 识别异常行为，实时推送告警并生成安全日志。 |
+| **智慧养殖** | 接入水质、投喂设备，实时监测养殖环境，自动调节投喂量并生成生长分析报告。 |
+| **智慧教室** | 接入考勤设备、互动大屏，自动记录出勤，辅助教师生成个性化学习报告与教学建议。 |
+| **智能电商** | 对接订单、库存、物流系统，AI 分析销售趋势，自动生成补货建议与营销策略。 |
 
-Your imagination is MoonHub's only boundary.
+你的想象力，就是 MoonHub 的边界。
 
-### Quick Start
+### 快速开始
 
-1. **Power On** — Device automatically creates a WiFi hotspot (`MoonHub-XXXX`)
-2. **Configure Network** — Connect to the hotspot, access the setup page, configure WiFi and set authorization code
-3. **Install PWA** — After configuration, follow the guide to install the PWA app
-4. **Start Using** — PWA automatically scans for local devices, enter the authorization code to start chatting, managing, and configuring
+1. **插电启动** — 设备开机后自动创建 WiFi 热点（`MoonHub-XXXX`）
+2. **手机配网** — 连接热点，访问配网页面，配置 WiFi 并设置授权码
+3. **安装 PWA** — 配网完成后引导安装 PWA 应用
+4. **开始使用** — PWA 自动扫描本地设备，输入授权码即可开始对话、管理和配置
 
 ## Features
 
