@@ -9,7 +9,7 @@ import (
 const provisioningAPIPrefix = "/api/provisioning/"
 
 // HeaderProvisioningToken is an alternate header for environments that strip Authorization.
-const HeaderProvisioningToken = "X-MoonHub-Provisioning-Token"
+const HeaderProvisioningToken = "X-Moonhub-Provisioning-Token"
 
 // ProvisioningAuth enforces a shared secret on /api/provisioning/* when token is non-empty.
 func ProvisioningAuth(token string, next http.Handler) http.Handler {
