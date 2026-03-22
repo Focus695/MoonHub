@@ -1,3 +1,7 @@
+> Archive Notice
+> This project has been archived in my personal repository and has now been migrated to the organization repository: https://github.com/RealityLink-Tech/MoonHub
+> This notice is hereby given.
+
 # MoonHub
 
 > [!NOTE]
