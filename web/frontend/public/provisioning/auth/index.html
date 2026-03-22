@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+
+<html class="light" lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>月枢 - 授权码生成</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700;800&amp;family=Noto+Sans+SC:wght@300;400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-variant": "#dbe4e7",
+                        "surface-dim": "#d1dce0",
+                        "on-surface": "#2b3437",
+                        "on-error-container": "#752121",
+                        "on-background": "#2b3437",
+                        "secondary-fixed": "#dce3eb",
+                        "error": "#9f403d",
+                        "error-dim": "#4e0309",
+                        "tertiary-fixed-dim": "#d0d5dc",
+                        "outline": "#737c7f",
+                        "on-tertiary-container": "#4d5258",
+                        "on-tertiary-fixed-variant": "#565c62",
+                        "on-secondary-fixed": "#384046",
+                        "surface": "#f8f9fa",
+                        "secondary": "#586066",
+                        "primary": "#506070",
+                        "tertiary-fixed": "#dee3ea",
+                        "primary-container": "#d4e4f7",
+                        "tertiary-dim": "#4e5459",
+                        "on-primary-fixed-variant": "#4e5d6d",
+                        "on-secondary": "#f4f9ff",
+                        "error-container": "#fe8983",
+                        "inverse-primary": "#daeafd",
+                        "primary-fixed-dim": "#c6d6e8",
+                        "background": "#f8f9fa",
+                        "on-secondary-fixed-variant": "#545d63",
+                        "tertiary": "#5a6066",
+                        "on-primary-fixed": "#31414f",
+                        "on-primary-container": "#445362",
+                        "secondary-fixed-dim": "#cdd5dc",
+                        "primary-dim": "#455463",
+                        "on-surface-variant": "#586064",
+                        "surface-bright": "#f8f9fa",
+                        "on-error": "#fff7f6",
+                        "surface-tint": "#506070",
+                        "surface-container-lowest": "#ffffff",
+                        "primary-fixed": "#d4e4f7",
+                        "inverse-on-surface": "#9b9d9e",
+                        "secondary-container": "#dce3eb",
+                        "outline-variant": "#abb3b7",
+                        "on-tertiary-fixed": "#3a4045",
+                        "surface-container-highest": "#dbe4e7",
+                        "surface-container": "#eaeff1",
+                        "on-primary": "#f4f8ff",
+                        "on-secondary-container": "#4b5359",
+                        "surface-container-high": "#e3e9ec",
+                        "on-tertiary": "#f6f9ff",
+                        "tertiary-container": "#dee3ea",
+                        "inverse-surface": "#0c0f10",
+                        "surface-container-low": "#f1f4f6",
+                        "secondary-dim": "#4c545a"
+                    },
+                    fontFamily: {
+                        "headline": ["Manrope", "Noto Sans SC"],
+                        "body": ["Manrope", "Noto Sans SC"],
+                        "label": ["Manrope", "Noto Sans SC"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+        }
+        .lunar-glow {
+            box-shadow: 0 0 40px 10px rgba(212, 228, 247, 0.4);
+        }
+        .lunar-text-glow {
+            text-shadow: 0 0 15px rgba(80, 96, 112, 0.15);
+        }
+        .halo-ring {
+            border: 1px solid rgba(80, 96, 112, 0.05);
+            animation: pulse-ring 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Anchor -->
+<header class="w-full top-0 sticky bg-gradient-to-b from-[#f8f9fa] to-transparent z-50">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-screen-xl mx-auto">
+<div class="flex items-center space-x-2 active:scale-95 transition-transform duration-300 cursor-pointer">
+<span class="material-symbols-outlined text-[#506070] text-xl">arrow_back</span>
+</div>
+<h1 class="font-['Manrope','PingFang_SC'] text-lg tracking-wider font-light text-[#506070]">设备配对</h1>
+<div class="w-6"></div> <!-- Spacer for center alignment -->
+</div>
+</header>
+<main class="min-h-[calc(100vh-64px)] flex flex-col items-center justify-center px-6 pb-24 relative overflow-hidden">
+<!-- Abstract Background Light Elements -->
+<div class="absolute top-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-primary-container/20 rounded-full blur-[120px] -z-10"></div>
+<!-- Success Celebration Icon & Halo -->
+<div class="relative flex items-center justify-center mb-12">
+<div class="absolute w-48 h-48 rounded-full halo-ring"></div>
+<div class="absolute w-32 h-32 rounded-full halo-ring" style="animation-delay: 1s;"></div>
+<div class="w-20 h-20 bg-surface-container-lowest rounded-full flex items-center justify-center shadow-sm relative z-10">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<!-- Headline & Code Section -->
+<div class="text-center space-y-8 max-w-md w-full">
+<div class="space-y-2">
+<h2 class="text-on-surface-variant font-light tracking-[0.2em] text-sm uppercase">Connection Successful</h2>
+<p class="text-primary font-medium text-lg">配网成功</p>
+</div>
+<!-- 6-Digit Auth Code -->
+<div class="py-10 bg-surface-container-lowest/40 backdrop-blur-md rounded-[2.5rem] border border-white/40 shadow-sm relative overflow-hidden group">
+<div class="relative z-10">
+<span class="block text-6xl md:text-7xl font-extralight tracking-[0.15em] text-primary lunar-text-glow font-headline">
+                        882 966
+                    </span>
+</div>
+<!-- Glass Reflection -->
+<div class="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent pointer-events-none"></div>
+</div>
+<div class="space-y-6">
+<p class="text-on-surface-variant font-light text-sm leading-relaxed px-8">
+                    请妥善保存此授权码，用于连接 PWA
+                </p>
+<!-- Minimal Copy Button -->
+<button class="inline-flex items-center space-x-2 px-6 py-3 rounded-full bg-surface-container-high text-primary text-sm font-medium hover:bg-surface-container-highest transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined text-sm">content_copy</span>
+<span>复制授权码</span>
+</button>
+</div>
+</div>
+<!-- Secondary Info & Main Action -->
+<div class="mt-20 w-full max-w-sm space-y-8">
+<div class="flex flex-col items-center space-y-1">
+<span class="text-[10px] text-outline-variant tracking-widest uppercase">Device Identity</span>
+<span class="text-on-surface-variant font-['Manrope'] text-xs font-light">YSHU-2024-OX2</span>
+</div>
+<button class="w-full py-5 rounded-full bg-gradient-to-br from-primary to-primary-dim text-on-primary font-medium tracking-wide shadow-lg shadow-primary/20 hover:opacity-90 active:scale-[0.98] transition-all duration-300">
+                完成配网，安装应用
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation Shell (Relevance: Sub-page focusing on Success state, but keeping navigation context for flow) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 bg-white/40 backdrop-blur-xl rounded-t-[2rem] shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+<!-- Connecting Tab (Inactive) -->
+<div class="flex flex-col items-center justify-center text-[#abb3b7] hover:text-[#506070] transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1">wifi</span>
+<span class="text-[11px] font-['Manrope'] tracking-[0.1em] uppercase">连接</span>
+</div>
+<!-- Authorization Tab (Active) -->
+<div class="flex flex-col items-center justify-center bg-gradient-to-br from-[#506070] to-[#708090] text-white rounded-full w-14 h-14 shadow-lg shadow-[#506070]/20 animate-pulse-slow">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">vpn_key</span>
+<span class="text-[10px] font-['Manrope'] tracking-[0.05em] uppercase hidden">授权</span>
+</div>
+<!-- Installation Tab (Inactive) -->
+<div class="flex flex-col items-center justify-center text-[#abb3b7] hover:text-[#506070] transition-opacity cursor-pointer">
+<span class="material-symbols-outlined mb-1">install_mobile</span>
+<span class="text-[11px] font-['Manrope'] tracking-[0.1em] uppercase">安装</span>
+</div>
+</nav>
+<!-- Visual Polish: Image Context (Abstract Background Pattern) -->
+<div class="hidden">
+<img data-alt="Abstract soft blue and white lunar gradient background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQwn93le7LVqloYukicDQv59zOThCWozHhfWkz5I9OClbzHL8-_EjKNCDtupfjCi-459-JaRAtVO-dJe7M4R7jhV5mXi96TX33bmFQmShPnXz_kIYBerWDiI422Xs99RYXFZNKdnabdOEDAlRK9yAGhnNKcYM0M17ARRGEEub6xDeN0eKXNx2G1Nc6vf_uCTrLLW5_Gk2hUksYAhYtz_R5BNt8kdSN-WiPCZgBRizqRMbKbSYobTPO_fSaUDRq6aGJnSB7UuFYDpc"/>
+</div>
+</body></html>

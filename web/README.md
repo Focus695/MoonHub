@@ -10,6 +10,19 @@ The service is structured as a monorepo containing both the backend and frontend
 *   **`backend/`**: The Go-based web server. It provides RESTful APIs, manages WebSocket connections for chat, and handles the lifecycle of the `moonhub` process. It eventually embeds the compiled frontend assets into a single executable.
 *   **`frontend/`**: The Vite + React + TanStack Router single-page application (SPA). It provides the interactive user interface.
 
+### Device provisioning (optional)
+
+Edge-style **WiFi provisioning** (hotspot, scan/connect, recovery, auth code, factory reset) is implemented in `pkg/provisioning/` and exposed by the launcher when `MOONHUB_PROVISIONING_ENABLED=1`.
+
+| Area | Location |
+| --- | --- |
+| Go API + SSE | `web/backend/api/provisioning.go`, `web/backend/middleware/provisioning_auth.go` |
+| Wiring + env | `web/backend/main.go` (`SetProvisioningHandler` **before** `RegisterRoutes`) |
+| React UI | `web/frontend/src/routes/provisioning/`, `web/frontend/src/components/provisioning/` |
+| PWA / offline (provisioning scope) | `web/frontend/public/sw.js`, `site.webmanifest` |
+
+**Documentation flow** (same pattern as other subsystems in the repo): [pkg/provisioning/docs/README.md](../pkg/provisioning/docs/README.md) → [CONFIG.md](../pkg/provisioning/docs/CONFIG.md) → [docs/implementation/provisioning-status.md](../docs/implementation/provisioning-status.md).
+
 ## Getting Started
 
 ### Prerequisites

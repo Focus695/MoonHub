@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>月枢 - 设备配网</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200;300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-variant": "#dbe4e7",
+              "surface-dim": "#d1dce0",
+              "on-surface": "#2b3437",
+              "on-error-container": "#752121",
+              "on-background": "#2b3437",
+              "secondary-fixed": "#dce3eb",
+              "error": "#9f403d",
+              "error-dim": "#4e0309",
+              "tertiary-fixed-dim": "#d0d5dc",
+              "outline": "#737c7f",
+              "on-tertiary-container": "#4d5258",
+              "on-tertiary-fixed-variant": "#565c62",
+              "on-secondary-fixed": "#384046",
+              "surface": "#f8f9fa",
+              "secondary": "#586066",
+              "primary": "#506070",
+              "tertiary-fixed": "#dee3ea",
+              "primary-container": "#d4e4f7",
+              "tertiary-dim": "#4e5459",
+              "on-primary-fixed-variant": "#4e5d6d",
+              "on-secondary": "#f4f9ff",
+              "error-container": "#fe8983",
+              "inverse-primary": "#daeafd",
+              "primary-fixed-dim": "#c6d6e8",
+              "background": "#f8f9fa",
+              "on-secondary-fixed-variant": "#545d63",
+              "tertiary": "#5a6066",
+              "on-primary-fixed": "#31414f",
+              "on-primary-container": "#445362",
+              "secondary-fixed-dim": "#cdd5dc",
+              "primary-dim": "#455463",
+              "on-surface-variant": "#586064",
+              "surface-bright": "#f8f9fa",
+              "on-error": "#fff7f6",
+              "surface-tint": "#506070",
+              "surface-container-lowest": "#ffffff",
+              "primary-fixed": "#d4e4f7",
+              "inverse-on-surface": "#9b9d9e",
+              "secondary-container": "#dce3eb",
+              "outline-variant": "#abb3b7",
+              "on-tertiary-fixed": "#3a4045",
+              "surface-container-highest": "#dbe4e7",
+              "surface-container": "#eaeff1",
+              "on-primary": "#f4f8ff",
+              "on-secondary-container": "#4b5359",
+              "surface-container-high": "#e3e9ec",
+              "on-tertiary": "#f6f9ff",
+              "tertiary-container": "#dee3ea",
+              "inverse-surface": "#0c0f10",
+              "surface-container-low": "#f1f4f6",
+              "secondary-dim": "#4c545a"
+            },
+            fontFamily: {
+              "headline": ["Manrope", "PingFang SC", "sans-serif"],
+              "body": ["Manrope", "PingFang SC", "sans-serif"],
+              "label": ["Manrope", "PingFang SC", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .lunar-halo {
+            box-shadow: 0 0 60px 10px rgba(212, 228, 247, 0.4);
+        }
+        .glass-panel {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-body min-h-screen selection:bg-primary-container">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky z-50 bg-gradient-to-b from-[#f8f9fa] to-transparent">
+<div class="flex items-center justify-between px-6 h-16 w-full max-w-screen-xl mx-auto">
+<button class="active:scale-95 transition-transform duration-300 hover:bg-[#d4e4f7]/30 p-2 rounded-full">
+<span class="material-symbols-outlined text-[#506070]" data-icon="arrow_back">arrow_back</span>
+</button>
+<h1 class="font-['Manrope','PingFang_SC'] text-lg tracking-wider font-light text-[#506070]">设备配对</h1>
+<div class="w-10"></div> <!-- Spacer -->
+</div>
+</header>
+<main class="max-w-md mx-auto px-6 pt-8 pb-32 flex flex-col items-center">
+<!-- Center Icon with Lunar Halo -->
+<div class="relative mb-12">
+<div class="absolute inset-0 bg-primary-container/30 rounded-full blur-3xl scale-150"></div>
+<div class="relative w-32 h-32 rounded-full bg-surface-container-lowest lunar-halo flex items-center justify-center">
+<span class="material-symbols-outlined text-primary text-5xl" data-icon="wifi">wifi</span>
+</div>
+</div>
+<!-- Wi-Fi Selection Section -->
+<div class="w-full space-y-8">
+<!-- Wi-Fi Selector Card -->
+<div class="space-y-4">
+<div class="flex justify-between items-end px-1">
+<label class="text-label-sm font-label uppercase tracking-widest text-outline-variant text-[11px]">选择网络</label>
+<button class="flex items-center gap-1 text-primary text-xs font-medium hover:opacity-70 transition-opacity">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+<span>刷新列表</span>
+</button>
+</div>
+<div class="group relative bg-surface-container-low hover:bg-surface-container-high transition-colors duration-500 rounded-xl p-4 flex items-center justify-between cursor-pointer border border-white/20">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary-dim" data-icon="wifi_tethering">wifi_tethering</span>
+<span class="text-on-surface font-medium">Lunar_Hub_5G</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline-variant text-lg" data-icon="signal_wifi_4_bar">signal_wifi_4_bar</span>
+<span class="material-symbols-outlined text-outline-variant text-lg" data-icon="expand_more">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Password Input Field -->
+<div class="space-y-4">
+<label class="px-1 text-label-sm font-label uppercase tracking-widest text-outline-variant text-[11px]">访问密码</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-lowest border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 py-4 px-1 transition-all duration-500 text-on-surface placeholder:text-outline-variant/50" placeholder="请输入密码" type="password"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-outline-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-icon="visibility_off">visibility_off</span>
+</button>
+</div>
+</div>
+<!-- Manual SSID Toggle -->
+<div class="flex items-center justify-between px-1 pt-2">
+<span class="text-sm text-on-surface-variant font-light">手动输入 SSID</span>
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</label>
+</div>
+</div>
+<!-- Primary Action Button -->
+<div class="fixed bottom-24 left-0 w-full px-6 flex justify-center">
+<button class="w-full max-w-[320px] h-12 bg-gradient-to-r from-primary to-primary-dim text-on-primary rounded-full font-medium text-sm tracking-widest shadow-lg shadow-primary/20 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2">
+<span class="leading-none">开始配网</span>
+<span class="material-symbols-outlined text-lg" data-icon="bolt">bolt</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 bg-white/40 backdrop-blur-xl border-t border-white/20 shadow-[0_-8px_30px_rgb(0,0,0,0.04)]">
+<a class="flex flex-col items-center justify-center bg-gradient-to-br from-[#506070] to-[#708090] text-white rounded-full w-14 h-14 shadow-lg shadow-[#506070]/20" href="#">
+<span class="material-symbols-outlined" data-icon="wifi">wifi</span>
+<span class="text-[11px] font-['Manrope'] tracking-[0.1em] uppercase mt-0.5 hidden">连接</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#abb3b7] hover:text-[#506070] transition-opacity hover:opacity-80" href="#">
+<span class="material-symbols-outlined" data-icon="vpn_key">vpn_key</span>
+<span class="text-[11px] font-['Manrope'] tracking-[0.1em] uppercase mt-1">授权</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#abb3b7] hover:text-[#506070] transition-opacity hover:opacity-80" href="#">
+<span class="material-symbols-outlined" data-icon="install_mobile">install_mobile</span>
+<span class="text-[11px] font-['Manrope'] tracking-[0.1em] uppercase mt-1">安装</span>
+</a>
+</nav>
+<!-- Content Overlays for Atmospheric Depth -->
+<div class="fixed top-20 -left-20 w-64 h-64 bg-primary-container/10 rounded-full blur-[80px] pointer-events-none"></div>
+<div class="fixed bottom-40 -right-20 w-80 h-80 bg-surface-dim/20 rounded-full blur-[100px] pointer-events-none"></div>
+</body></html>

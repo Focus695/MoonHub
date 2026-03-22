@@ -12,6 +12,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"flag"
 	"fmt"
@@ -22,6 +23,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/sipeed/moonhub/pkg/provisioning"
 	"github.com/sipeed/moonhub/web/backend/api"
 	"github.com/sipeed/moonhub/web/backend/launcherconfig"
 	"github.com/sipeed/moonhub/web/backend/middleware"
@@ -112,20 +114,44 @@ func main() {
 	// Initialize Server components
 	mux := http.NewServeMux()
 
-	// API Routes (e.g. /api/status)
 	apiHandler := api.NewHandler(absPath)
 	apiHandler.SetServerOptions(portNum, effectivePublic, explicitPublic, launcherCfg.AllowedCIDRs)
+
+	// Device provisioning: SetProvisioningHandler must run before RegisterRoutes so routes are mounted.
+	provisioningEnabled := os.Getenv("MOONHUB_PROVISIONING_ENABLED") == "1"
+	if provisioningEnabled {
+		provisioningConfigPath := filepath.Join(filepath.Dir(absPath), "provisioning.json")
+		configStore, err := provisioning.NewJSONConfigStore(provisioningConfigPath)
+		if err != nil {
+			log.Printf("Warning: Failed to initialize provisioning config: %v", err)
+		} else {
+			deviceManager := provisioning.NewDeviceManager(configStore, provisioning.DeviceManagerOptions{
+				AllowSystemControl: os.Getenv("MOONHUB_ALLOW_SYSTEM_CONTROL") == "1",
+			})
+			go deviceManager.Start(context.Background())
+			provisioningHandler := api.NewProvisioningHandler(deviceManager)
+			apiHandler.SetProvisioningHandler(provisioningHandler)
+			log.Println("Device provisioning enabled")
+		}
+	}
+
 	apiHandler.RegisterRoutes(mux)
 
 	// Frontend Embedded Assets
 	registerEmbedRoutes(mux)
 
-	accessControlledMux, err := middleware.IPAllowlist(launcherCfg.AllowedCIDRs, mux)
+	provisioningToken := os.Getenv("MOONHUB_PROVISIONING_TOKEN")
+	if provisioningEnabled && effectivePublic && provisioningToken == "" {
+		log.Printf("Warning: MOONHUB_PROVISIONING_ENABLED with public listen but MOONHUB_PROVISIONING_TOKEN is unset; provisioning API is reachable without a shared secret")
+	}
+	provAuthMux := middleware.ProvisioningAuth(provisioningToken, mux)
+
+	accessControlledMux, err := middleware.IPAllowlist(launcherCfg.AllowedCIDRs, provAuthMux)
 	if err != nil {
 		log.Fatalf("Invalid allowed CIDR configuration: %v", err)
 	}
 
-	// Apply middleware stack
+	// Apply middleware stack (outermost first: recover → log → … → IP allowlist → provisioning auth → mux)
 	handler := middleware.Recoverer(
 		middleware.Logger(
 			middleware.JSONContentType(accessControlledMux),

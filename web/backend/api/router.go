@@ -17,6 +17,7 @@ type Handler struct {
 	oauthMu              sync.Mutex
 	oauthFlows           map[string]*oauthFlow
 	oauthState           map[string]string
+	provisioning         *ProvisioningHandler
 }
 
 // NewHandler creates an instance of the API handler.
@@ -35,6 +36,11 @@ func (h *Handler) SetServerOptions(port int, public bool, publicExplicit bool, a
 	h.serverPublic = public
 	h.serverPublicExplicit = publicExplicit
 	h.serverCIDRs = append([]string(nil), allowedCIDRs...)
+}
+
+// SetProvisioningHandler sets the provisioning handler for device management.
+func (h *Handler) SetProvisioningHandler(handler *ProvisioningHandler) {
+	h.provisioning = handler
 }
 
 // RegisterRoutes binds all API endpoint handlers to the ServeMux.
@@ -69,4 +75,9 @@ func (h *Handler) RegisterRoutes(mux *http.ServeMux) {
 
 	// Launcher service parameters (port/public)
 	h.registerLauncherConfigRoutes(mux)
+
+	// Provisioning (device management)
+	if h.provisioning != nil {
+		h.provisioning.RegisterRoutes(mux)
+	}
 }

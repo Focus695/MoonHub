@@ -1,0 +1,18 @@
+/* Material Symbols Outlined Font
+ * Download woff2 file from: https://fonts.google.com/specimen/Material+Symbols+Outlined
+ * Save as: fonts/material-symbols/MaterialSymbolsOutlined.woff2
+ */
+
+@font-face {
+  font-family: 'Material Symbols Outlined';
+  src: url('/fonts/material-symbols/MaterialSymbolsOutlined.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Fallback class for material symbols */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-variation-settings: 'FILL 0, wght 400, GRAD 0';
+}
