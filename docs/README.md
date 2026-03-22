@@ -9,6 +9,7 @@ This page is the **entry point and reading guide** for the repository documentat
 3. [Troubleshooting](./troubleshooting.md), [Debug Guide](./debug.md) — Runtime issues reference
 4. [Tools & Capabilities Configuration](./tools_configuration.md) — Tool-side configuration (`tools.*` in `config.json`)
 5. If you enable **sub-agent delegation** (`delegation.enabled`): [pkg/delegation/docs/README.md](../pkg/delegation/docs/README.md) → [CONFIG.md](../pkg/delegation/docs/CONFIG.md) → [implementation status](./implementation/delegation-status.md)
+6. If you enable **device provisioning** on the web launcher (`MOONHUB_PROVISIONING_ENABLED=1`): [pkg/provisioning/docs/README.md](../pkg/provisioning/docs/README.md) → [CONFIG.md](../pkg/provisioning/docs/CONFIG.md) → [implementation status](./implementation/provisioning-status.md) (detailed reference)
 
 ## Documentation Flow by Subsystem
 
@@ -75,6 +76,14 @@ This page is the **entry point and reading guide** for the repository documentat
 | 4 | [`pkg/routing/docs/METRICS.md`](../pkg/routing/docs/METRICS.md) | Metrics collection, decision recorder, HTTP endpoints |
 | Status | [`docs/implementation/routing-status.md`](./implementation/routing-status.md) | Full implementation status, integration points, tests |
 
+### Device Provisioning (WiFi / hotspot / recovery)
+
+| Order | Document | Description |
+| --- | --- | --- |
+| 1 | [`pkg/provisioning/docs/README.md`](../pkg/provisioning/docs/README.md) | Package scope, source map, integration entry points |
+| 2 | [`pkg/provisioning/docs/CONFIG.md`](../pkg/provisioning/docs/CONFIG.md) | Environment variables, `device.*` / `onboarding.*` keys, sidecar `provisioning.json` |
+| Status | [`docs/implementation/provisioning-status.md`](./implementation/provisioning-status.md) | Full implementation status (Chinese), API table, frontend layout, tests |
+
 ### Channels
 
 Channel architecture, migration, and how to implement a channel: [`pkg/channels/README.md`](../pkg/channels/README.md). Per-channel behavior also lives with each plugin under [`pkg/plugins/channels/`](../pkg/plugins/channels/) (see [`pkg/plugins/docs/PLUGIN_INDEX.md`](../pkg/plugins/docs/PLUGIN_INDEX.md)).
@@ -83,7 +92,7 @@ Channel architecture, migration, and how to implement a channel: [`pkg/channels/
 
 | Document | Description |
 | --- | --- |
-| [`web/README.md`](../web/README.md) | Web interface development (React + Vite frontend, Go backend) |
+| [`web/README.md`](../web/README.md) | Web interface development (React + Vite frontend, Go backend); includes device provisioning UI and API notes |
 
 ---
 
@@ -98,6 +107,7 @@ Channel architecture, migration, and how to implement a channel: [`pkg/channels/
 | [`memory-status.md`](./implementation/memory-status.md) | Memory system implementation status |
 | [`delegation-status.md`](./implementation/delegation-status.md) | Sub-agent delegation orchestration implementation status |
 | [`routing-status.md`](./implementation/routing-status.md) | Smart Router V2 (4-tier routing) implementation status |
+| [`provisioning-status.md`](./implementation/provisioning-status.md) | Device provisioning (WiFi, hotspot, SSE, recovery, auth code, web UI) implementation status |
 
 ---
 
@@ -151,6 +161,7 @@ Per-channel specific documentation:
 | `utils/` | Shared utilities |
 | `voice/` | Voice/audio processing |
 | `devices/` | Hardware device interfaces (I2C, SPI) |
+| `provisioning/` | Device WiFi provisioning, hotspot, recovery, auth code (opt-in via launcher env) |
 | `fileutil/` | File operation utilities |
 | `constants/` | Shared constants |
 

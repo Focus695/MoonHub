@@ -5,7 +5,7 @@
 >
 > This project is based on features from [TinyClaw](https://github.com/wgtechlabs/tinyclaw) and the lightweight design of [PicoClaw](https://github.com/sipeed/picoclaw), with unique features developed for this project. Licensed under GPL-3.0.
 
-**Documentation Index** (plugins, learning, compactor, SHIELD, memory, delegation, etc.): [`docs/README.md`](docs/README.md).
+**Documentation Index** (plugins, learning, compactor, SHIELD, memory, delegation, provisioning, etc.): [`docs/README.md`](docs/README.md).
 
 **[English](README.md)**
 
@@ -19,11 +19,13 @@ MoonHub 是一款面向边缘计算的**本地优先 AI 助手**——简单、�
 
 ### 设计理念
 
-| 原则 | 描述 |
-|------|------|
-| **Simple** | 零学习曲线。开箱即用，像使用家用电器一样简单。 |
-| **Fast** | 极致轻量。<10MB 内存，1 秒冷启动，毫秒级响应。 |
-| **Secure** | 本地优先。数据不出设备，隐私完全由你掌控。 |
+
+| 原则         | 描述                          |
+| ---------- | --------------------------- |
+| **Simple** | 零学习曲线。开箱即用，像使用家用电器一样简单。     |
+| **Fast**   | 极致轻量。<10MB 内存，1 秒冷启动，毫秒级响应。 |
+| **Secure** | 本地优先。数据不出设备，隐私完全由你掌控。       |
+
 
 ### 核心特性
 
@@ -41,20 +43,22 @@ MoonHub 是一款面向边缘计算的**本地优先 AI 助手**——简单、�
 
 ### 无限可能
 
-MoonHub 可运行于任何边缘设备，为你的场景注入智能。基于本项目二次开发，打造专属解决方案：
+MoonHub 扎根于边缘计算场景，在保持极致轻量（<10MB 内存）的同时，兼顾流畅体验与完整功能。虽然项目有明确的核心演进方向，但架构设计上充分支持各类边缘场景的二次开发——无论是智慧农业、工业物联网，还是智能零售、家庭自动化，你都可以基于 MoonHub 快速构建专属的智能化解决方案。
 
-| 场景 | 描述 |
-|------|------|
-| **智能灌溉** | 接入土壤湿度、气象传感器，Agent 根据实时数据动态调整灌溉策略，实现精准节水农业。 |
-| **工业监控** | 部署于生产车间，实时采集设备状态，预测性维护告警，生成可视化运维看板。 |
-| **智慧门店** | 连接客流统计、库存传感器，自动生成补货建议、销售分析报告，辅助经营决策。 |
-| **能源管理** | 对接智能电表、光伏逆变器，实时优化用电策略，生成能耗报告与节能建议。 |
-| **智能 CRM** | 集成客户数据、沟通记录，AI 分析客户画像，自动生成跟进提醒与销售机会洞察。 |
-| **智能运维** | 接入服务器、应用监控数据，AI 识别异常模式，自动告警并生成故障诊断报告。 |
-| **智能安防** | 对接摄像头、门窗传感器，AI 识别异常行为，实时推送告警并生成安全日志。 |
-| **智慧养殖** | 接入水质、投喂设备，实时监测养殖环境，自动调节投喂量并生成生长分析报告。 |
-| **智慧教室** | 接入考勤设备、互动大屏，自动记录出勤，辅助教师生成个性化学习报告与教学建议。 |
-| **智能电商** | 对接订单、库存、物流系统，AI 分析销售趋势，自动生成补货建议与营销策略。 |
+
+| 场景         | 描述                                          |
+| ---------- | ------------------------------------------- |
+| **智能灌溉**   | 接入土壤湿度、气象传感器，Agent 根据实时数据动态调整灌溉策略，实现精准节水农业。 |
+| **工业监控**   | 部署于生产车间，实时采集设备状态，预测性维护告警，生成可视化运维看板。         |
+| **智慧门店**   | 连接客流统计、库存传感器，自动生成补货建议、销售分析报告，辅助经营决策。        |
+| **能源管理**   | 对接智能电表、光伏逆变器，实时优化用电策略，生成能耗报告与节能建议。          |
+| **智能 CRM** | 集成客户数据、沟通记录，AI 分析客户画像，自动生成跟进提醒与销售机会洞察。      |
+| **智能运维**   | 接入服务器、应用监控数据，AI 识别异常模式，自动告警并生成故障诊断报告。       |
+| **智能安防**   | 对接摄像头、门窗传感器，AI 识别异常行为，实时推送告警并生成安全日志。        |
+| **智慧养殖**   | 接入水质、投喂设备，实时监测养殖环境，自动调节投喂量并生成生长分析报告。        |
+| **智慧教室**   | 接入考勤设备、互动大屏，自动记录出勤，辅助教师生成个性化学习报告与教学建议。      |
+| **智能电商**   | 对接订单、库存、物流系统，AI 分析销售趋势，自动生成补货建议与营销策略。       |
+
 
 你的想象力，就是 MoonHub 的边界。
 
@@ -72,38 +76,49 @@ MoonHub 可运行于任何边缘设备，为你的场景注入智能。基于本
 - **Adaptive Memory** — 3-layer memory system (episodic, semantic FTS5, temporal decay) that learns what to remember and forget over time.
 - **Self-Improving** — Behavioral pattern detection system that learns from user feedback, tracks tool usage preferences, and evolves patterns over time.
 - **Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.
-- **Context Compactor** — 4-layer context compaction pipeline (rules, dedup, LLM summary, L0/L1/L2 tiers) integrated in the agent loop; see [`docs/implementation/compactor-status.md`](docs/implementation/compactor-status.md) and [`pkg/compactor/docs/`](pkg/compactor/docs/README.md).
-- **SHIELD.md Anti-Malware** — Runtime threat evaluation engine with YAML threat parsing, pattern matching, approval workflow, and 8 built-in threats; see [`docs/implementation/shield-status.md`](docs/implementation/shield-status.md) and [`pkg/shield/docs/`](pkg/shield/docs/README.md).
-- **Delegation System** — Sub-agent orchestration (non-blocking and background tasks, template reuse, adaptive timeouts, SQLite persistence, Intercom pub/sub). Opt-in via `delegation.enabled` in `config.json` (default off); see [`pkg/delegation/docs/README.md`](pkg/delegation/docs/README.md), [`pkg/delegation/docs/CONFIG.md`](pkg/delegation/docs/CONFIG.md), and [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md).
-- **Inter-Agent Comms (Intercom)** — In-process pub/sub for delegation-time signals: subscribe per topic (`On`), catch-all via `OnAny`, bounded per-topic retention with `Recent` / `RecentAll`. TinyClaw-compatible topic constants; see [`pkg/delegation/intercom.go`](pkg/delegation/intercom.go) and the Intercom section in [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md).
+- **Context Compactor** — 4-layer context compaction pipeline (rules, dedup, LLM summary, L0/L1/L2 tiers) integrated in the agent loop; see `[docs/implementation/compactor-status.md](docs/implementation/compactor-status.md)` and `[pkg/compactor/docs/](pkg/compactor/docs/README.md)`.
+- **SHIELD.md Anti-Malware** — Runtime threat evaluation engine with YAML threat parsing, pattern matching, approval workflow, and 8 built-in threats; see `[docs/implementation/shield-status.md](docs/implementation/shield-status.md)` and `[pkg/shield/docs/](pkg/shield/docs/README.md)`.
+- **Delegation System** — Sub-agent orchestration (non-blocking and background tasks, template reuse, adaptive timeouts, SQLite persistence, Intercom pub/sub). Opt-in via `delegation.enabled` in `config.json` (default off); see `[pkg/delegation/docs/README.md](pkg/delegation/docs/README.md)`, `[pkg/delegation/docs/CONFIG.md](pkg/delegation/docs/CONFIG.md)`, and `[docs/implementation/delegation-status.md](docs/implementation/delegation-status.md)`.
+- **Inter-Agent Comms (Intercom)** — In-process pub/sub for delegation-time signals: subscribe per topic (`On`), catch-all via `OnAny`, bounded per-topic retention with `Recent` / `RecentAll`. TinyClaw-compatible topic constants; see `[pkg/delegation/intercom.go](pkg/delegation/intercom.go)` and the Intercom section in `[docs/implementation/delegation-status.md](docs/implementation/delegation-status.md)`.
 - **Smart Router V2** — 4-tier model routing system (simple/moderate/complex/reasoning) with rule-based scoring, feature extraction, and privacy-safe metrics. Routes simple queries to cheap models and complex ones to powerful models; see [`pkg/routing/docs/README.md`](pkg/routing/docs/README.md) and [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md).
+- **Device Provisioning** — 零配置 WiFi 配网（热点、扫描/连接、诊断、自动与手动恢复、恢复出厂、授权码、SSE）。在 Web 启动器上通过 `MOONHUB_PROVISIONING_ENABLED=1` 启用；含 React 配网向导与针对该流程的可选 PWA 离线缓存。参阅 [`pkg/provisioning/docs/README.md`](pkg/provisioning/docs/README.md)、[`pkg/provisioning/docs/CONFIG.md`](pkg/provisioning/docs/CONFIG.md)、[`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md)。
 
 ### Planned
 
-- **Device Provisioning** — Zero-config device WiFi setup with hotspot, network management, SSE events, and recovery mechanisms (backend API layer; see [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md))
-- **PWA Frontend** — User-facing PWA application for device discovery, pairing, and interaction with the MoonHub device
+- **PWA Frontend** — 面向最终用户的完整 PWA（设备发现、配对与日常使用，超出配网向导范围）
 - **Dynamic UI Generation** — Real-time visual component generation based on user needs (dashboards, task managers, data visualizations)
 - **Native APP** — Native mobile applications for iOS and Android platforms
-- **Factory Reset** — Device factory reset functionality (interface already reserved)
-- **Enhanced Network Recovery** — Optional automatic network recovery mechanism optimization
 
-<details>
-<summary><strong>Completed (click to expand)</strong></summary>
+**Completed (click to expand)**
 
 - ~~**Self-Improving** — Behavioral pattern detection that makes the agent better with every interaction. It grows with you.~~ → **Implemented**
 - ~~**Plugin Architecture** — Channels, providers, and tools are all plugins. The core stays tiny — everything else is extensible.~~ → **Implemented**
 - ~~**Context Compactor** — 4-layer context compaction pipeline with rule-based pre-compression, deduplication, LLM summarization, and tiered summaries.~~ → **Implemented**
 - ~~**SHIELD.md Anti-Malware** — Runtime SHIELD.md enforcement engine with threat parsing, pattern matching, and built-in anti-malware protection.~~ → **Implemented**
-- ~~**Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.~~ → **Implemented** (opt-in; see [`pkg/delegation/docs/`](pkg/delegation/docs/README.md) and [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md))
-- ~~**Smart Routing** — 4-tier query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.~~ → **Implemented** (see [`pkg/routing/docs/`](pkg/routing/docs/README.md) and [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md))
+- ~~**Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.~~ → **Implemented** (opt-in; see `[pkg/delegation/docs/](pkg/delegation/docs/README.md)` and `[docs/implementation/delegation-status.md](docs/implementation/delegation-status.md)`)
+- ~~**Smart Routing** — 4-tier query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.~~ → **Implemented** (see `[pkg/routing/docs/](pkg/routing/docs/README.md)` and `[docs/implementation/routing-status.md](docs/implementation/routing-status.md)`)
 - ~~**Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.~~ → **Implemented** (delegation **Intercom** in [`pkg/delegation/intercom.go`](pkg/delegation/intercom.go); enabled with delegation)
-
-</details>
+- ~~**Device Provisioning** — 零配置 WiFi 配网、恢复、出厂重置、配网 UI。~~ → **Implemented**（启动器可选启用；见 [`pkg/provisioning/docs/README.md`](pkg/provisioning/docs/README.md) 与 [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md)）
 
 ## Changelog
 
-<details>
-<summary><strong>2026-03-21 — Smart Router V2 (4-Tier Model Routing)</strong></summary>
+**2026-03-22 — 配网文档流**
+
+#### 摘要
+
+设备配网文档与仓库其他子系统对齐：**英文包级文档**（`pkg/provisioning/docs/`）→ **中文实现状态**（`docs/implementation/provisioning-status.md`），并在文档索引、Web 说明与 `CLAUDE.md` 中建立交叉引用。
+
+#### 文档
+
+- [`pkg/provisioning/docs/README.md`](pkg/provisioning/docs/README.md) — 职责、源码地图、与 Web API / 启动器 / 前端的集成表
+- [`pkg/provisioning/docs/CONFIG.md`](pkg/provisioning/docs/CONFIG.md) — 环境变量、`provisioning.json`、持久化键、HTTP/SSE 与浏览器令牌说明
+- [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md) — 文首增加与上述文档一致的阅读顺序；保留原有 API 与前端说明
+- [`docs/README.md`](docs/README.md) — 子系统表格、首次阅读第 6 步、`docs/implementation/` 与 `pkg/` 索引条目
+- [`web/README.md`](web/README.md) — 可选配网小节（路径 + 文档流）
+- [`CLAUDE.md`](CLAUDE.md) — `provisioning/` 包说明、启动器环境变量与文档链接
+- [`README.md`](README.md)、[`README_CN.md`](README_CN.md) — 功能列表中配网已归类为 Implemented 并附文档链接
+
+**2026-03-21 — Smart Router V2 (4-Tier Model Routing)**
 
 #### Summary
 
@@ -112,6 +127,7 @@ MoonHub 可运行于任何边缘设备，为你的场景注入智能。基于本
 #### New Features
 
 **Smart Router V2** (`pkg/routing/`)
+
 - **4-Tier Classification** — simple, moderate, complex, reasoning tiers with configurable boundaries
 - **Rule-Based Scoring** — Sub-microsecond classification using structural features (no API calls)
 - **Feature Extraction** — Token estimate, code blocks, tool calls, conversation depth, attachments
@@ -125,12 +141,12 @@ MoonHub 可运行于任何边缘设备，为你的场景注入智能。基于本
 
 #### Documentation
 
-- [`pkg/routing/docs/README.md`](pkg/routing/docs/README.md) — Overview, architecture, quick start
-- [`pkg/routing/docs/CONFIG.md`](pkg/routing/docs/CONFIG.md) — Configuration options, tier mapping, custom boundaries
-- [`pkg/routing/docs/FEATURES.md`](pkg/routing/docs/FEATURES.md) — Feature extraction, scoring weights, examples
-- [`pkg/routing/docs/METRICS.md`](pkg/routing/docs/METRICS.md) — Metrics collection, decision recorder, HTTP endpoints
-- [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md) — Full implementation status
-- [`docs/README.md`](docs/README.md) — Repository documentation index (updated)
+- `[pkg/routing/docs/README.md](pkg/routing/docs/README.md)` — Overview, architecture, quick start
+- `[pkg/routing/docs/CONFIG.md](pkg/routing/docs/CONFIG.md)` — Configuration options, tier mapping, custom boundaries
+- `[pkg/routing/docs/FEATURES.md](pkg/routing/docs/FEATURES.md)` — Feature extraction, scoring weights, examples
+- `[pkg/routing/docs/METRICS.md](pkg/routing/docs/METRICS.md)` — Metrics collection, decision recorder, HTTP endpoints
+- `[docs/implementation/routing-status.md](docs/implementation/routing-status.md)` — Full implementation status
+- `[docs/README.md](docs/README.md)` — Repository documentation index (updated)
 
 #### Technical Details
 
@@ -149,10 +165,9 @@ MoonHub 可运行于任何边缘设备，为你的场景注入智能。基于本
 - `pkg/health/server.go` — HTTP endpoints for metrics and decisions
 - `docs/README.md` — Updated Smart Router section with full documentation links
 
-</details>
 
-<details>
-<summary><strong>2026-03-21 — Delegation System (sub-agent orchestration)</strong></summary>
+
+**2026-03-21 — Delegation System (sub-agent orchestration)**
 
 #### Summary
 
@@ -160,9 +175,9 @@ Sub-agent delegation aligned with TinyClaw-style workflows: eight tools, SQLite 
 
 #### Documentation
 
-- [`pkg/delegation/docs/README.md`](pkg/delegation/docs/README.md), [`pkg/delegation/docs/CONFIG.md`](pkg/delegation/docs/CONFIG.md) — Package-level docs (flow + config)
-- [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md) — Deep implementation reference
-- [`docs/README.md`](docs/README.md) — Repository index (delegation subsystem table)
+- `[pkg/delegation/docs/README.md](pkg/delegation/docs/README.md)`, `[pkg/delegation/docs/CONFIG.md](pkg/delegation/docs/CONFIG.md)` — Package-level docs (flow + config)
+- `[docs/implementation/delegation-status.md](docs/implementation/delegation-status.md)` — Deep implementation reference
+- `[docs/README.md](docs/README.md)` — Repository index (delegation subsystem table)
 
 #### Code (high level)
 
@@ -170,10 +185,9 @@ Sub-agent delegation aligned with TinyClaw-style workflows: eight tools, SQLite 
 - `pkg/agent/delegation_integration.go`, `pkg/agent/instance.go`, `pkg/agent/loop.go` — Runtime wiring
 - `pkg/config/config.go`, `pkg/config/defaults.go` — `DelegationConfig`
 
-</details>
 
-<details>
-<summary><strong>2026-03-21 — SHIELD.md Anti-Malware Implementation</strong></summary>
+
+**2026-03-21 — SHIELD.md Anti-Malware Implementation**
 
 #### New Features
 
@@ -205,25 +219,23 @@ A runtime threat evaluation engine inspired by TinyClaw design:
 - `pkg/tools/skills_install.go` — Shield integration for skill installation
 - `docs/implementation/shield-status.md` — Implementation status
 
-</details>
 
-<details>
-<summary><strong>2026-03-20 — Context Compactor &amp; documentation flow</strong></summary>
+
+**2026-03-20 — Context Compactor & documentation flow**
 
 #### Features
 
-- **Context Compactor** (`pkg/compactor/`) — Four-layer pipeline (rule-based pre-compression, deduplication, LLM summary, L0/L1/L2 tiers) integrated into Agent; see `compactor` config and [`pkg/compactor/docs/CONFIG.md`](pkg/compactor/docs/CONFIG.md).
+- **Context Compactor** (`pkg/compactor/`) — Four-layer pipeline (rule-based pre-compression, deduplication, LLM summary, L0/L1/L2 tiers) integrated into Agent; see `compactor` config and `[pkg/compactor/docs/CONFIG.md](pkg/compactor/docs/CONFIG.md)`.
 
 #### Documentation
 
-- Added repository documentation entry [`docs/README.md`](docs/README.md), distinguishing "package docs" from `docs/implementation/*-status.md` consistent with `pkg/learning/docs`.
-- Added [`pkg/compactor/docs/`](pkg/compactor/docs/README.md) (README + CONFIG).
-- Fixed link to `plugin-architecture-status.md` pointing to actual file [`docs/implementation/plugin-status.md`](docs/implementation/plugin-status.md).
+- Added repository documentation entry `[docs/README.md](docs/README.md)`, distinguishing "package docs" from `docs/implementation/*-status.md` consistent with `pkg/learning/docs`.
+- Added `[pkg/compactor/docs/](pkg/compactor/docs/README.md)` (README + CONFIG).
+- Fixed link to `plugin-architecture-status.md` pointing to actual file `[docs/implementation/plugin-status.md](docs/implementation/plugin-status.md)`.
 
-</details>
 
-<details>
-<summary><strong>2025-03-20 — Plugin Architecture Implementation</strong></summary>
+
+**2025-03-20 — Plugin Architecture Implementation**
 
 #### New Features
 
@@ -260,10 +272,9 @@ A comprehensive plugin system that makes channels, providers, and tools all exte
 - `pkg/tools/registry.go` — MergeFrom method
 - `docs/implementation/plugin-status.md` — Implementation status
 
-</details>
 
-<details>
-<summary><strong>2025-03-19 — Self-Improving System Implementation</strong></summary>
+
+**2025-03-19 — Self-Improving System Implementation**
 
 #### New Features
 
@@ -303,4 +314,3 @@ A comprehensive learning system that makes the agent better with every interacti
 - `pkg/config/config.go` — Learning configuration options
 - `.golangci.yaml` — Updated to v2 format
 
-</details>

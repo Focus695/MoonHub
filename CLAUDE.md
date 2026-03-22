@@ -109,6 +109,7 @@ make docker-test
 - **commands/** - Slash command definitions and execution
 - **routing/** - Message routing between channels and agents
 - **mcp/** - Model Context Protocol integration
+- **provisioning/** - Optional device WiFi provisioning, hotspot, recovery, auth code (used by web launcher when enabled)
 
 ### CLI Commands (cmd/moonhub/internal/)
 
@@ -124,7 +125,7 @@ make docker-test
 ### Web Interface (web/)
 
 - **frontend/** - React + Vite + TanStack Router dashboard
-- **backend/** - Go web server with embedded frontend
+- **backend/** - Go web server with embedded frontend; optional `/api/provisioning/*` and `/provisioning` UI when `MOONHUB_PROVISIONING_ENABLED=1`
 
 ### Key Entry Points
 
@@ -140,6 +141,11 @@ make docker-test
 - Environment variables:
   - `MOONHUB_CONFIG` - Override config file path
   - `MOONHUB_HOME` - Override data root directory
+  - `MOONHUB_PROVISIONING_ENABLED` - Set to `1` on the **web launcher** to enable device provisioning API and UI
+  - `MOONHUB_PROVISIONING_TOKEN` - Optional shared secret for `/api/provisioning/*` (recommended with `-public`)
+  - `MOONHUB_ALLOW_SYSTEM_CONTROL` - Set to `1` to allow provisioning-triggered system restart hooks
+
+Docs: [pkg/provisioning/docs/README.md](pkg/provisioning/docs/README.md), [pkg/provisioning/docs/CONFIG.md](pkg/provisioning/docs/CONFIG.md).
 
 ## Workspace Structure
 

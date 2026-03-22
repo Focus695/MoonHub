@@ -41,7 +41,7 @@ Users interact with the device through a dedicated app. Currently provided as a 
 
 ### Infinite Possibilities
 
-MoonHub runs on any edge device, injecting intelligence into your scenarios. Build your own solutions through secondary development:
+MoonHub is deeply rooted in edge computing scenarios, maintaining extreme lightweight (<10MB memory) while delivering smooth experience and complete functionality. While the project has a clear core roadmap, its architecture is designed to fully support secondary development for diverse edge scenarios—whether smart agriculture, industrial IoT, intelligent retail, or home automation, you can rapidly build your own intelligent solutions on top of MoonHub.
 
 | Scenario | Description |
 |----------|-------------|
@@ -77,15 +77,13 @@ Your imagination is MoonHub's only boundary.
 - **Delegation System** — Sub-agent orchestration (non-blocking and background tasks, template reuse, adaptive timeouts, SQLite persistence, Intercom pub/sub). Opt-in via `delegation.enabled` in `config.json` (default off); see [`pkg/delegation/docs/README.md`](pkg/delegation/docs/README.md), [`pkg/delegation/docs/CONFIG.md`](pkg/delegation/docs/CONFIG.md), and [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md).
 - **Inter-Agent Comms (Intercom)** — In-process pub/sub for delegation-time signals: subscribe per topic (`On`), catch-all via `OnAny`, bounded per-topic retention with `Recent` / `RecentAll`. TinyClaw-compatible topic constants; see [`pkg/delegation/intercom.go`](pkg/delegation/intercom.go) and the Intercom section in [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md).
 - **Smart Router V2** — 4-tier model routing system (simple/moderate/complex/reasoning) with rule-based scoring, feature extraction, and privacy-safe metrics. Routes simple queries to cheap models and complex ones to powerful models; see [`pkg/routing/docs/README.md`](pkg/routing/docs/README.md) and [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md).
+- **Device Provisioning** — Zero-config WiFi setup (hotspot, scan/connect, diagnostics, automatic and manual recovery, factory reset, auth code, SSE). Opt-in on the web launcher via `MOONHUB_PROVISIONING_ENABLED=1`; includes React provisioning wizard and optional PWA offline cache for that flow. See [`pkg/provisioning/docs/README.md`](pkg/provisioning/docs/README.md), [`pkg/provisioning/docs/CONFIG.md`](pkg/provisioning/docs/CONFIG.md), and [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md).
 
 ### Planned
 
-- **Device Provisioning** — Zero-config device WiFi setup with hotspot, network management, SSE events, and recovery mechanisms (backend API layer; see [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md))
-- **PWA Frontend** — User-facing PWA application for device discovery, pairing, and interaction with the MoonHub device
+- **PWA Frontend** — Full user-facing PWA for device discovery, pairing, and day-to-day interaction beyond the provisioning wizard
 - **Dynamic UI Generation** — Real-time visual component generation based on user needs (dashboards, task managers, data visualizations)
 - **Native APP** — Native mobile applications for iOS and Android platforms
-- **Factory Reset** — Device factory reset functionality (interface already reserved)
-- **Enhanced Network Recovery** — Optional automatic network recovery mechanism optimization
 
 <details>
 <summary><strong>Completed (click to expand)</strong></summary>
@@ -97,10 +95,30 @@ Your imagination is MoonHub's only boundary.
 - ~~**Delegation System** — Autonomous sub-agent orchestration with self-improving role templates, blackboard collaboration, and adaptive timeouts.~~ → **Implemented** (opt-in; see [`pkg/delegation/docs/`](pkg/delegation/docs/README.md) and [`docs/implementation/delegation-status.md`](docs/implementation/delegation-status.md))
 - ~~**Smart Routing** — 4-tier query classifier that routes simple queries to cheap models and complex ones to powerful ones, cutting LLM costs.~~ → **Implemented** (see [`pkg/routing/docs/`](pkg/routing/docs/README.md) and [`docs/implementation/routing-status.md`](docs/implementation/routing-status.md))
 - ~~**Inter-Agent Comms** — Lightweight pub/sub event bus for real-time inter-agent communication with wildcard subscriptions and bounded history.~~ → **Implemented** (delegation **Intercom** in [`pkg/delegation/intercom.go`](pkg/delegation/intercom.go); enabled with delegation)
+- ~~**Device Provisioning** — Zero-config WiFi setup, recovery, factory reset, provisioning UI.~~ → **Implemented** (launcher opt-in; see [`pkg/provisioning/docs/README.md`](pkg/provisioning/docs/README.md) and [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md))
 
 </details>
 
 ## Changelog
+
+<details>
+<summary><strong>2026-03-22 — Device provisioning documentation flow</strong></summary>
+
+#### Summary
+
+Repository documentation now follows the same **package docs → implementation status** pattern as routing, delegation, and compactor: English `pkg/provisioning/docs/`, Chinese deep-dive in `docs/implementation/provisioning-status.md`, and cross-links from the doc index, web guide, and `CLAUDE.md`.
+
+#### Documentation
+
+- [`pkg/provisioning/docs/README.md`](pkg/provisioning/docs/README.md) — Scope, source map, integration table (web API, launcher, frontend)
+- [`pkg/provisioning/docs/CONFIG.md`](pkg/provisioning/docs/CONFIG.md) — Environment variables, `provisioning.json`, persisted keys, HTTP/SSE and browser token notes
+- [`docs/implementation/provisioning-status.md`](docs/implementation/provisioning-status.md) — Reading-order header linking the above; existing API and UI reference retained
+- [`docs/README.md`](docs/README.md) — Subsystem table, first-time reading step 6, `docs/implementation/` row, `pkg/` overview entry
+- [`web/README.md`](web/README.md) — Optional provisioning subsection (paths + doc flow)
+- [`CLAUDE.md`](CLAUDE.md) — `provisioning/` package note, launcher env vars, doc links
+- [`README.md`](README.md) / [`README_CN.md`](README_CN.md) — Device Provisioning listed under Implemented with doc links
+
+</details>
 
 <details>
 <summary><strong>2026-03-21 — Smart Router V2 (4-Tier Model Routing)</strong></summary>
