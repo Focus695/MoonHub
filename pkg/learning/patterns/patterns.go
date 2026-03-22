@@ -58,41 +58,41 @@ func NewManager() *Manager {
 // GetPatterns returns patterns for a specific language
 func (m *Manager) GetPatterns(lang i18n.Language) PatternSet {
 	if lang == i18n.LangAuto {
-	 // Return combined patterns for auto mode
-        return m.combinePatterns()
-    }
-    return m.patterns[lang]
+		// Return combined patterns for auto mode
+		return m.combinePatterns()
+	}
+	return m.patterns[lang]
 }
 
 // GetSemantics returns semantic indicators for a specific language
 func (m *Manager) GetSemantics(lang i18n.Language) SemanticIndicators {
-    if lang == i18n.LangAuto {
-        // Return combined semantics for auto mode
-        return m.combineSemantics()
-    }
-    return m.semantics[lang]
+	if lang == i18n.LangAuto {
+		// Return combined semantics for auto mode
+		return m.combineSemantics()
+	}
+	return m.semantics[lang]
 }
 
 // GetAllPatterns returns patterns for all languages combined
 func (m *Manager) GetAllPatterns() PatternSet {
-    return m.combinePatterns()
+	return m.combinePatterns()
 }
 
 // GetAllSemantics returns semantic indicators for all languages combined
 func (m *Manager) GetAllSemantics() SemanticIndicators {
-    return m.combineSemantics()
+	return m.combineSemantics()
 }
 
 // combinePatterns combines patterns from all languages
 func (m *Manager) combinePatterns() PatternSet {
-    combined := PatternSet{
-        Positive:   append(m.patterns[i18n.LangEn].Positive, m.patterns[i18n.LangZh].Positive...),
-        Negative:   append(m.patterns[i18n.LangEn].Negative, m.patterns[i18n.LangZh].Negative...),
-        Correction: append(m.patterns[i18n.LangEn].Correction, m.patterns[i18n.LangZh].Correction...),
-        Workflow:   append(m.patterns[i18n.LangEn].Workflow, m.patterns[i18n.LangZh].Workflow...),
-        ToolPref:   append(m.patterns[i18n.LangEn].ToolPref, m.patterns[i18n.LangZh].ToolPref...),
-    }
-    return combined
+	combined := PatternSet{
+		Positive:   append(m.patterns[i18n.LangEn].Positive, m.patterns[i18n.LangZh].Positive...),
+		Negative:   append(m.patterns[i18n.LangEn].Negative, m.patterns[i18n.LangZh].Negative...),
+		Correction: append(m.patterns[i18n.LangEn].Correction, m.patterns[i18n.LangZh].Correction...),
+		Workflow:   append(m.patterns[i18n.LangEn].Workflow, m.patterns[i18n.LangZh].Workflow...),
+		ToolPref:   append(m.patterns[i18n.LangEn].ToolPref, m.patterns[i18n.LangZh].ToolPref...),
+	}
+	return combined
 }
 
 // combineSemantics combines semantic indicators from all languages

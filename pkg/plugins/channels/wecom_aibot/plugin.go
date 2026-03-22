@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-    plugin.RegisterPlugin(&WeComAIBotPlugin{})
+	plugin.RegisterPlugin(&WeComAIBotPlugin{})
 }
 
 // WeComAIBotPlugin implements ChannelPlugin interface for WeCom AI Bot
@@ -24,37 +24,37 @@ type WeComAIBotPlugin struct{}
 
 // Metadata returns plugin metadata
 func (p *WeComAIBotPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-wecom_aibot",
-        Name:        "WeCom AI Bot",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "WeCom AI Bot channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-wecom_aibot",
+		Name:        "WeCom AI Bot",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "WeCom AI Bot channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *WeComAIBotPlugin) Init(ctx *plugin.RuntimeContext) error {
-    return nil
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *WeComAIBotPlugin) Validate(cfg *config.Config) error {
-    if cfg.Channels.WeComAIBot.Enabled && cfg.Channels.WeComAIBot.Token == "" {
-        return fmt.Errorf("wecom_aibot token required when enabled")
-    }
-    return nil
+	if cfg.Channels.WeComAIBot.Enabled && cfg.Channels.WeComAIBot.Token == "" {
+		return fmt.Errorf("wecom_aibot token required when enabled")
+	}
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *WeComAIBotPlugin) ChannelPrefix() string {
-    return "wecom_aibot"
+	return "wecom_aibot"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *WeComAIBotPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.WeComAIBot.Enabled && cfg.Channels.WeComAIBot.Token != ""
+	return cfg.Channels.WeComAIBot.Enabled && cfg.Channels.WeComAIBot.Token != ""
 }
 
 // CreateChannel instantiates the channel implementation

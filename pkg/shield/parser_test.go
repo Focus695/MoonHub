@@ -134,7 +134,7 @@ func TestParseDirectives(t *testing.T) {
 			expected: nil,
 		},
 		{
-			name: "single BLOCK directive",
+			name:    "single BLOCK directive",
 			content: `BLOCK: tool.call exec`,
 			expected: []Directive{
 				{Action: ActionBlock, Condition: "tool.call exec"},

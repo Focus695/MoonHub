@@ -789,12 +789,12 @@ type ShieldEvaluator interface {
 
 // ShieldEvent represents an event for shield evaluation.
 type ShieldEvent struct {
-	Scope     ShieldScope `json:"scope"`
-	ToolName  string      `json:"tool_name,omitempty"`
+	Scope     ShieldScope    `json:"scope"`
+	ToolName  string         `json:"tool_name,omitempty"`
 	ToolArgs  map[string]any `json:"tool_args,omitempty"`
-	Domain    string      `json:"domain,omitempty"`
-	URL       string      `json:"url,omitempty"`
-	SkillName string      `json:"skill_name,omitempty"`
+	Domain    string         `json:"domain,omitempty"`
+	URL       string         `json:"url,omitempty"`
+	SkillName string         `json:"skill_name,omitempty"`
 }
 
 // ShieldScope represents the event scope.
@@ -813,19 +813,19 @@ const (
 type ShieldAction string
 
 const (
-	ActionBlock          ShieldAction = "block"
+	ActionBlock           ShieldAction = "block"
 	ActionRequireApproval ShieldAction = "require_approval"
-	ActionLog            ShieldAction = "log"
+	ActionLog             ShieldAction = "log"
 )
 
 // ShieldDecision represents the enforcement decision.
 type ShieldDecision struct {
-	Action      ShieldAction `json:"action"`
-	Scope       ShieldScope  `json:"scope"`
-	ThreatID    string       `json:"threat_id,omitempty"`
-	Reason      string       `json:"reason"`
-	MatchedOn   string       `json:"matched_on,omitempty"`
-	MatchValue  string       `json:"match_value,omitempty"`
+	Action     ShieldAction `json:"action"`
+	Scope      ShieldScope  `json:"scope"`
+	ThreatID   string       `json:"threat_id,omitempty"`
+	Reason     string       `json:"reason"`
+	MatchedOn  string       `json:"matched_on,omitempty"`
+	MatchValue string       `json:"match_value,omitempty"`
 }
 
 // WithShield sets the shield evaluator for the tool.
@@ -933,9 +933,9 @@ func (t *WebFetchTool) Execute(ctx context.Context, args map[string]any) *ToolRe
 	// Shield evaluation for network egress (skipped after loop-level approval; see shield.ContextWithApprovedToolExecution)
 	if !shield.ApprovedToolExecution(ctx) && t.shield != nil && t.shield.IsActive() {
 		decision := t.shield.Evaluate(ShieldEvent{
-			Scope:  ScopeNetworkEgress,
-			URL:    urlStr,
-			Domain: hostname,
+			Scope:    ScopeNetworkEgress,
+			URL:      urlStr,
+			Domain:   hostname,
 			ToolArgs: args,
 		})
 

@@ -69,4 +69,3 @@ func initEnglishSemantics() SemanticIndicators {
 		},
 	}
 }
-

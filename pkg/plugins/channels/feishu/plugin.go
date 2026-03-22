@@ -14,7 +14,7 @@ import (
 )
 
 func init() {
-    plugin.RegisterPlugin(&FeishuPlugin{})
+	plugin.RegisterPlugin(&FeishuPlugin{})
 }
 
 // FeishuPlugin implements ChannelPlugin interface for Feishu
@@ -22,34 +22,34 @@ type FeishuPlugin struct{}
 
 // Metadata returns plugin metadata
 func (p *FeishuPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-feishu",
-        Name:        "Feishu",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "Feishu/Lark bot channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-feishu",
+		Name:        "Feishu",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "Feishu/Lark bot channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *FeishuPlugin) Init(ctx *plugin.RuntimeContext) error {
-    return nil
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *FeishuPlugin) Validate(cfg *config.Config) error {
-    return nil
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *FeishuPlugin) ChannelPrefix() string {
-    return "feishu"
+	return "feishu"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *FeishuPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.Feishu.Enabled
+	return cfg.Channels.Feishu.Enabled
 }
 
 // CreateChannel instantiates the channel implementation

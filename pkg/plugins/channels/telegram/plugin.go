@@ -16,48 +16,48 @@ import (
 )
 
 func init() {
-	 plugin.RegisterPlugin(&TelegramPlugin{})
+	plugin.RegisterPlugin(&TelegramPlugin{})
 }
 
 // TelegramPlugin implements ChannelPlugin interface for Telegram
 type TelegramPlugin struct {
-    ctx *plugin.RuntimeContext
+	ctx *plugin.RuntimeContext
 }
 
 // Metadata returns plugin metadata
 func (p *TelegramPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-telegram",
-        Name:        "Telegram",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "Telegram bot channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-telegram",
+		Name:        "Telegram",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "Telegram bot channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *TelegramPlugin) Init(ctx *plugin.RuntimeContext) error {
-    p.ctx = ctx
-    return nil
+	p.ctx = ctx
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *TelegramPlugin) Validate(cfg *config.Config) error {
-    if cfg.Channels.Telegram.Enabled && cfg.Channels.Telegram.Token == "" {
-        return fmt.Errorf("telegram token required when enabled")
-    }
-    return nil
+	if cfg.Channels.Telegram.Enabled && cfg.Channels.Telegram.Token == "" {
+		return fmt.Errorf("telegram token required when enabled")
+	}
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *TelegramPlugin) ChannelPrefix() string {
-    return "telegram"
+	return "telegram"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *TelegramPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.Telegram.Enabled && cfg.Channels.Telegram.Token != ""
+	return cfg.Channels.Telegram.Enabled && cfg.Channels.Telegram.Token != ""
 }
 
 // CreateChannel instantiates the channel implementation

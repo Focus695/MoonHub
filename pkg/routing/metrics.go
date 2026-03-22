@@ -262,10 +262,10 @@ func (n *NoOpMetricsCollector) RecordClassification(result ClassificationResult)
 // GetSnapshot returns an empty snapshot.
 func (n *NoOpMetricsCollector) GetSnapshot() MetricsSnapshot {
 	return MetricsSnapshot{
-		Timestamp:              time.Now(),
-		TierCounts:             make(map[QueryTier]int64),
-		SignalCounts:           make(map[string]int64),
-		TotalClassifications:   0,
+		Timestamp:            time.Now(),
+		TierCounts:           make(map[QueryTier]int64),
+		SignalCounts:         make(map[string]int64),
+		TotalClassifications: 0,
 	}
 }
 

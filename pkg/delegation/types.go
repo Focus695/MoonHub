@@ -19,12 +19,12 @@ const (
 type TaskCategory string
 
 const (
-	CategoryResearch  TaskCategory = "research"
-	CategoryCode      TaskCategory = "code"
-	CategoryAnalysis  TaskCategory = "analysis"
-	CategoryWriting   TaskCategory = "writing"
-	CategoryGeneral   TaskCategory = "general"
-	CategoryCustom    TaskCategory = "custom"
+	CategoryResearch TaskCategory = "research"
+	CategoryCode     TaskCategory = "code"
+	CategoryAnalysis TaskCategory = "analysis"
+	CategoryWriting  TaskCategory = "writing"
+	CategoryGeneral  TaskCategory = "general"
+	CategoryCustom   TaskCategory = "custom"
 )
 
 // SubAgentRecord represents a persistent sub-agent instance
@@ -45,34 +45,34 @@ type SubAgentRecord struct {
 
 // BackgroundTaskRecord represents a background task execution
 type BackgroundTaskRecord struct {
-	ID             string       `json:"id"`
-	SubAgentID     string       `json:"sub_agent_id"`
-	UserID         string       `json:"user_id"`
-	Task           string       `json:"task"`
-	Category       TaskCategory `json:"category"`
-	Status         string       `json:"status"` // pending, running, completed, failed
-	Result         string       `json:"result"`
-	CreatedAt      int64        `json:"created_at"`
-	CompletedAt    int64        `json:"completed_at"`
-	Delivered      bool         `json:"delivered"`
-	OriginChannel  string       `json:"origin_channel"`
-	OriginChatID   string       `json:"origin_chat_id"`
+	ID            string       `json:"id"`
+	SubAgentID    string       `json:"sub_agent_id"`
+	UserID        string       `json:"user_id"`
+	Task          string       `json:"task"`
+	Category      TaskCategory `json:"category"`
+	Status        string       `json:"status"` // pending, running, completed, failed
+	Result        string       `json:"result"`
+	CreatedAt     int64        `json:"created_at"`
+	CompletedAt   int64        `json:"completed_at"`
+	Delivered     bool         `json:"delivered"`
+	OriginChannel string       `json:"origin_channel"`
+	OriginChatID  string       `json:"origin_chat_id"`
 }
 
 // RoleTemplate represents a reusable role configuration
 type RoleTemplate struct {
-	ID             string       `json:"id"`
-	UserID         string       `json:"user_id"`
-	Name           string       `json:"name"`
-	RolePrompt     string       `json:"role_prompt"`
-	TaskKeywords   []string     `json:"task_keywords"`
-	Tools          []string     `json:"tools"`
-	Category       TaskCategory `json:"category"`
-	SuccessCount   int          `json:"success_count"`
-	FailureCount   int          `json:"failure_count"`
-	AvgDurationMs  int64        `json:"avg_duration_ms"`
-	CreatedAt      int64        `json:"created_at"`
-	LastUsedAt     int64        `json:"last_used_at"`
+	ID            string       `json:"id"`
+	UserID        string       `json:"user_id"`
+	Name          string       `json:"name"`
+	RolePrompt    string       `json:"role_prompt"`
+	TaskKeywords  []string     `json:"task_keywords"`
+	Tools         []string     `json:"tools"`
+	Category      TaskCategory `json:"category"`
+	SuccessCount  int          `json:"success_count"`
+	FailureCount  int          `json:"failure_count"`
+	AvgDurationMs int64        `json:"avg_duration_ms"`
+	CreatedAt     int64        `json:"created_at"`
+	LastUsedAt    int64        `json:"last_used_at"`
 }
 
 // TaskMetricRecord represents timing metrics for adaptive timeouts
@@ -88,17 +88,17 @@ type TaskMetricRecord struct {
 
 // SubAgentMessage represents a message in a sub-agent's history
 type SubAgentMessage struct {
-	ID          string `json:"id"`
-	SubAgentID  string `json:"sub_agent_id"`
-	Role        string `json:"role"`
-	Content     string `json:"content"`
-	CreatedAt   int64  `json:"created_at"`
+	ID         string `json:"id"`
+	SubAgentID string `json:"sub_agent_id"`
+	Role       string `json:"role"`
+	Content    string `json:"content"`
+	CreatedAt  int64  `json:"created_at"`
 }
 
 // OrientationContext provides context for sub-agent orientation
 type OrientationContext struct {
-	SessionSummary string   `json:"session_summary"`
-	RecentTasks    []string `json:"recent_tasks"`
+	SessionSummary  string   `json:"session_summary"`
+	RecentTasks     []string `json:"recent_tasks"`
 	UserPreferences []string `json:"user_preferences"`
 }
 
@@ -167,9 +167,9 @@ type SubAgentSummary struct {
 
 // TimeoutEstimate represents an estimated timeout for a task
 type TimeoutEstimate struct {
-	Duration  time.Duration `json:"duration"`
-	Category  TaskCategory  `json:"category"`
-	Confidence float64      `json:"confidence"` // 0-1, based on sample size
+	Duration   time.Duration `json:"duration"`
+	Category   TaskCategory  `json:"category"`
+	Confidence float64       `json:"confidence"` // 0-1, based on sample size
 }
 
 // BlackboardProposal represents a proposal in the blackboard collaboration mode

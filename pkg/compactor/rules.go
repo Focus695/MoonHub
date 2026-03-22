@@ -21,23 +21,23 @@ type PreCompressOptions struct {
 
 // Chinese fullwidth punctuation -> ASCII equivalents (each saves ~1 token)
 var zhPunctMap = map[rune]rune{
-	'，': ',',
-	'。': '.',
-	'；': ';',
-	'：': ':',
-	'！': '!',
-	'？': '?',
-	'\u201C': '"', // " left double quotation mark
-	'\u201D': '"', // " right double quotation mark
+	'，':      ',',
+	'。':      '.',
+	'；':      ';',
+	'：':      ':',
+	'！':      '!',
+	'？':      '?',
+	'\u201C': '"',  // " left double quotation mark
+	'\u201D': '"',  // " right double quotation mark
 	'\u2018': '\'', // ' left single quotation mark
 	'\u2019': '\'', // ' right single quotation mark
-	'（': '(',
-	'）': ')',
-	'【': '[',
-	'】': ']',
-	'、': ',',
-	'…':  '.', // Simplified
-	'~':  '~',
+	'（':      '(',
+	'）':      ')',
+	'【':      '[',
+	'】':      ']',
+	'、':      ',',
+	'…':      '.', // Simplified
+	'~':      '~',
 }
 
 // Matches most emoji: emoticons, dingbats, symbols, skin tones, ZWJ sequences
@@ -152,9 +152,9 @@ func RemoveEmptySections(text string) string {
 	lines := strings.Split(text, "\n")
 
 	type Section struct {
-		header   string
-		level    int
-		body     []string
+		header string
+		level  int
+		body   []string
 	}
 
 	var sections []Section

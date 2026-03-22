@@ -126,7 +126,7 @@ func (m *LifecycleManager) Suspend(ctx context.Context, id string) error {
 	}
 
 	if err := m.store.UpdateSubAgent(ctx, id, map[string]any{
-		"status":        string(StatusSuspended),
+		"status":         string(StatusSuspended),
 		"last_active_at": time.Now().UnixMilli(),
 	}); err != nil {
 		return err
@@ -196,7 +196,7 @@ func (m *LifecycleManager) Revive(ctx context.Context, id string) error {
 	}
 
 	if err := m.store.UpdateSubAgent(ctx, id, map[string]any{
-		"status":        string(StatusActive),
+		"status":         string(StatusActive),
 		"last_active_at": time.Now().UnixMilli(),
 	}); err != nil {
 		return err

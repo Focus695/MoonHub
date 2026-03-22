@@ -42,13 +42,13 @@ func initChinese() TextResources {
 			},
 		},
 		Context: ContextText{
-			Preferences:    "## 已学习的偏好",
-			ToolPrefs:      "## 工具偏好",
-			Workflow:       "## 工作流模式",
-			WhatWorks:      "## 有效做法",
-			Corrections:    "## 最近修正",
-			Insights:       "## 行为洞察",
-			Notes:          "## 备注",
+			Preferences: "## 已学习的偏好",
+			ToolPrefs:   "## 工具偏好",
+			Workflow:    "## 工作流模式",
+			WhatWorks:   "## 有效做法",
+			Corrections: "## 最近修正",
+			Insights:    "## 行为洞察",
+			Notes:       "## 备注",
 		},
 	}
 }

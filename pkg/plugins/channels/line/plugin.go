@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-    plugin.RegisterPlugin(&LINEPlugin{})
+	plugin.RegisterPlugin(&LINEPlugin{})
 }
 
 // LINEPlugin implements ChannelPlugin interface for LINE
@@ -24,37 +24,37 @@ type LINEPlugin struct{}
 
 // Metadata returns plugin metadata
 func (p *LINEPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-line",
-        Name:        "LINE",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "LINE bot channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-line",
+		Name:        "LINE",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "LINE bot channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *LINEPlugin) Init(ctx *plugin.RuntimeContext) error {
-    return nil
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *LINEPlugin) Validate(cfg *config.Config) error {
-    if cfg.Channels.LINE.Enabled && cfg.Channels.LINE.ChannelAccessToken == "" {
-        return fmt.Errorf("line channel_access_token required when enabled")
-    }
-    return nil
+	if cfg.Channels.LINE.Enabled && cfg.Channels.LINE.ChannelAccessToken == "" {
+		return fmt.Errorf("line channel_access_token required when enabled")
+	}
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *LINEPlugin) ChannelPrefix() string {
-    return "line"
+	return "line"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *LINEPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.LINE.Enabled && cfg.Channels.LINE.ChannelAccessToken != ""
+	return cfg.Channels.LINE.Enabled && cfg.Channels.LINE.ChannelAccessToken != ""
 }
 
 // CreateChannel instantiates the channel implementation

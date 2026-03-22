@@ -20,10 +20,10 @@ import (
 	"github.com/sipeed/moonhub/pkg/bus"
 	"github.com/sipeed/moonhub/pkg/config"
 	"github.com/sipeed/moonhub/pkg/constants"
+	"github.com/sipeed/moonhub/pkg/framework"
 	"github.com/sipeed/moonhub/pkg/health"
 	"github.com/sipeed/moonhub/pkg/logger"
 	"github.com/sipeed/moonhub/pkg/media"
-	"github.com/sipeed/moonhub/pkg/framework"
 )
 
 const (

@@ -10,21 +10,21 @@ import (
 
 // SessionQueue manages per-agent serial execution of tasks
 type SessionQueue struct {
-	mu      sync.Mutex
-	queues  map[string]*agentQueue
+	mu     sync.Mutex
+	queues map[string]*agentQueue
 }
 
 type agentQueue struct {
-	tasks    chan *queuedTask
-	running  bool
+	tasks   chan *queuedTask
+	running bool
 }
 
 type queuedTask struct {
-	task      func(ctx context.Context) error
-	ctx       context.Context
-	done      chan error
-	taskID    string
-	agentID   string
+	task    func(ctx context.Context) error
+	ctx     context.Context
+	done    chan error
+	taskID  string
+	agentID string
 }
 
 // NewSessionQueue creates a new session queue
@@ -211,9 +211,9 @@ func (e *QueueError) Error() string {
 
 // PrioritySessionQueue extends SessionQueue with priority support
 type PrioritySessionQueue struct {
-	mu       sync.Mutex
-	high     map[string]*agentQueue
-	normal   map[string]*agentQueue
+	mu     sync.Mutex
+	high   map[string]*agentQueue
+	normal map[string]*agentQueue
 }
 
 // NewPrioritySessionQueue creates a new priority session queue

@@ -32,22 +32,22 @@ type SummaryStore struct {
 
 // CompactionState tracks incremental compaction state
 type CompactionState struct {
-	SessionKey            string
-	LastCompactionTime    int64
-	LastMessageIndex      int
-	TotalCompactions      int
+	SessionKey         string
+	LastCompactionTime int64
+	LastMessageIndex   int
+	TotalCompactions   int
 }
 
 // CompactionHistoryRecord represents a single compaction history entry
 type CompactionHistoryRecord struct {
-	ID               int64
-	SessionKey       string
-	CompactionID     int64
-	MessagesRemoved  int
-	DedupGroups      int
-	RulesApplied     string // JSON array
-	DurationMs       int64
-	CreatedAt        int64
+	ID              int64
+	SessionKey      string
+	CompactionID    int64
+	MessagesRemoved int
+	DedupGroups     int
+	RulesApplied    string // JSON array
+	DurationMs      int64
+	CreatedAt       int64
 }
 
 // Schema SQL statements

@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-    plugin.RegisterPlugin(&DiscordPlugin{})
+	plugin.RegisterPlugin(&DiscordPlugin{})
 }
 
 // DiscordPlugin implements ChannelPlugin interface for Discord
@@ -24,37 +24,37 @@ type DiscordPlugin struct{}
 
 // Metadata returns plugin metadata
 func (p *DiscordPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-discord",
-        Name:        "Discord",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "Discord bot channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-discord",
+		Name:        "Discord",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "Discord bot channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *DiscordPlugin) Init(ctx *plugin.RuntimeContext) error {
-    return nil
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *DiscordPlugin) Validate(cfg *config.Config) error {
-    if cfg.Channels.Discord.Enabled && cfg.Channels.Discord.Token == "" {
-        return fmt.Errorf("discord token required when enabled")
-    }
-    return nil
+	if cfg.Channels.Discord.Enabled && cfg.Channels.Discord.Token == "" {
+		return fmt.Errorf("discord token required when enabled")
+	}
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *DiscordPlugin) ChannelPrefix() string {
-    return "discord"
+	return "discord"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *DiscordPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.Discord.Enabled && cfg.Channels.Discord.Token != ""
+	return cfg.Channels.Discord.Enabled && cfg.Channels.Discord.Token != ""
 }
 
 // CreateChannel instantiates the channel implementation

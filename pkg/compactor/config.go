@@ -46,18 +46,18 @@ type Config struct {
 // DefaultConfig returns the default compactor configuration
 func DefaultConfig() Config {
 	return Config{
-		Enabled:                 true,
-		TriggerTokenPercent:     70,
-		KeepRecent:              10,
-		TierBudgets:             DefaultTierBudgets(),
-		DedupEnabled:            true,
+		Enabled:                  true,
+		TriggerTokenPercent:      70,
+		KeepRecent:               10,
+		TierBudgets:              DefaultTierBudgets(),
+		DedupEnabled:             true,
 		DedupSimilarityThreshold: 0.6,
-		StripEmoji:              true,
-		RemoveDuplicateLines:    true,
-		NormalizeCJK:            true,
-		SmartRuleSelection:      true,
-		ParallelProcessing:      true,
-		IncrementalCompaction:   true,
+		StripEmoji:               true,
+		RemoveDuplicateLines:     true,
+		NormalizeCJK:             true,
+		SmartRuleSelection:       true,
+		ParallelProcessing:       true,
+		IncrementalCompaction:    true,
 	}
 }
 

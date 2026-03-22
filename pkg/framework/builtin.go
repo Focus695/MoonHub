@@ -11,6 +11,7 @@ package plugin
 //   - Channel plugins: pkg/plugins/channels/*
 //   - Provider plugins: pkg/plugins/providers/*
 //   - Tool plugins: pkg/plugins/tools/*
+//
 // This function is a no-op kept for API compatibility.
 func LoadBuiltin() {
 	// Plugin imports are in cmd/moonhub/internal/gateway/helpers.go

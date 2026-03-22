@@ -1461,10 +1461,10 @@ func (al *AgentLoop) runLLMIteration(
 						}
 						logger.WarnCF("shield", "Tool call blocked by security policy",
 							map[string]any{
-								"tool":       tc.Name,
-								"threat_id":  decision.ThreatID,
-								"reason":     decision.Reason,
-								"match_on":   decision.MatchedOn,
+								"tool":        tc.Name,
+								"threat_id":   decision.ThreatID,
+								"reason":      decision.Reason,
+								"match_on":    decision.MatchedOn,
 								"match_value": decision.MatchValue,
 							})
 						agentResults[idx].result = toolResult
@@ -1479,10 +1479,10 @@ func (al *AgentLoop) runLLMIteration(
 
 						logger.WarnCF("shield", "Tool call requires approval - waiting for user response",
 							map[string]any{
-								"tool":         tc.Name,
-								"threat_id":    decision.ThreatID,
-								"approval_id":  req.ID,
-								"reason":       decision.Reason,
+								"tool":        tc.Name,
+								"threat_id":   decision.ThreatID,
+								"approval_id": req.ID,
+								"reason":      decision.Reason,
 							})
 
 						// Send approval request to user
@@ -1503,10 +1503,10 @@ func (al *AgentLoop) runLLMIteration(
 							}
 							logger.InfoCF("shield", "Approval rejected or expired",
 								map[string]any{
-									"tool":        tc.Name,
-									"threat_id":   decision.ThreatID,
-									"approved":    approved,
-									"error":       err,
+									"tool":      tc.Name,
+									"threat_id": decision.ThreatID,
+									"approved":  approved,
+									"error":     err,
 								})
 							agentResults[idx].result = toolResult
 							return
@@ -1515,17 +1515,17 @@ func (al *AgentLoop) runLLMIteration(
 						// User approved, continue with tool execution
 						logger.InfoCF("shield", "Approval granted for tool call",
 							map[string]any{
-								"tool":       tc.Name,
-								"threat_id":  decision.ThreatID,
+								"tool":        tc.Name,
+								"threat_id":   decision.ThreatID,
 								"approval_id": req.ID,
 							})
 					case shield.ActionLog:
 						if decision.ThreatID != "" {
 							logger.InfoCF("shield", "Threat detected (log only)",
 								map[string]any{
-									"tool":       tc.Name,
-									"threat_id":  decision.ThreatID,
-									"match_on":   decision.MatchedOn,
+									"tool":        tc.Name,
+									"threat_id":   decision.ThreatID,
+									"match_on":    decision.MatchedOn,
 									"match_value": decision.MatchValue,
 								})
 						}

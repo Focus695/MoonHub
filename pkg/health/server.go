@@ -180,13 +180,13 @@ func (s *Server) metricsHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Convert to JSON-friendly format
 	response := map[string]any{
-		"timestamp":            snapshot.Timestamp,
-		"total_classifications": snapshot.TotalClassifications,
-		"avg_score":            snapshot.AvgScore,
-		"avg_confidence":       snapshot.AvgConfidence,
-		"tier_counts":          snapshot.TierCounts,
-		"signal_counts":        snapshot.SignalCounts,
-		"score_distribution":   snapshot.ScoreDistribution,
+		"timestamp":               snapshot.Timestamp,
+		"total_classifications":   snapshot.TotalClassifications,
+		"avg_score":               snapshot.AvgScore,
+		"avg_confidence":          snapshot.AvgConfidence,
+		"tier_counts":             snapshot.TierCounts,
+		"signal_counts":           snapshot.SignalCounts,
+		"score_distribution":      snapshot.ScoreDistribution,
 		"confidence_distribution": snapshot.ConfidenceDistribution,
 	}
 

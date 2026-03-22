@@ -94,11 +94,11 @@ func (t *InstallSkillTool) Execute(ctx context.Context, args map[string]any) *To
 		case shield.ActionBlock:
 			logger.WarnCF("tool", "Skill installation blocked by security policy",
 				map[string]any{
-					"tool":       "install_skill",
-					"skill":      slug,
-					"registry":   registryName,
-					"threat_id":  decision.ThreatID,
-					"reason":     decision.Reason,
+					"tool":      "install_skill",
+					"skill":     slug,
+					"registry":  registryName,
+					"threat_id": decision.ThreatID,
+					"reason":    decision.Reason,
 				})
 			return ErrorResult(fmt.Sprintf("Skill installation blocked by security policy: %s", decision.Reason))
 
@@ -113,8 +113,8 @@ func (t *InstallSkillTool) Execute(ctx context.Context, args map[string]any) *To
 					"threat_id": decision.ThreatID,
 				})
 			return &ToolResult{
-				ForLLM:  fmt.Sprintf("Skill installation requires approval: %s", decision.Reason),
-				IsError: false,
+				ForLLM:           fmt.Sprintf("Skill installation requires approval: %s", decision.Reason),
+				IsError:          false,
 				RequiresApproval: true,
 			}
 
@@ -122,11 +122,11 @@ func (t *InstallSkillTool) Execute(ctx context.Context, args map[string]any) *To
 			if decision.ThreatID != "" {
 				logger.InfoCF("tool", "Skill installation logged",
 					map[string]any{
-						"tool":       "install_skill",
-						"skill":      slug,
-						"registry":   registryName,
-						"threat_id":  decision.ThreatID,
-						"match_on":   decision.MatchedOn,
+						"tool":        "install_skill",
+						"skill":       slug,
+						"registry":    registryName,
+						"threat_id":   decision.ThreatID,
+						"match_on":    decision.MatchedOn,
 						"match_value": decision.MatchValue,
 					})
 			}

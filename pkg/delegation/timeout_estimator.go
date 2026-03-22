@@ -11,10 +11,10 @@ import (
 
 // TimeoutEstimator provides adaptive timeout estimation based on historical data
 type TimeoutEstimator struct {
-	store         DelegationStore
+	store           DelegationStore
 	defaultTimeouts map[TaskCategory]time.Duration
-	maxTimeout    time.Duration
-	minTimeout    time.Duration
+	maxTimeout      time.Duration
+	minTimeout      time.Duration
 }
 
 // NewTimeoutEstimator creates a new timeout estimator

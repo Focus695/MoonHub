@@ -10,34 +10,34 @@ import (
 
 func TestComputeShingles(t *testing.T) {
 	tests := []struct {
-		name       string
-		text       string
+		name        string
+		text        string
 		shingleSize int
-		wantCount  int // minimum expected shingle count
+		wantCount   int // minimum expected shingle count
 	}{
 		{
-			name:       "simple text",
-			text:       "hello world test",
+			name:        "simple text",
+			text:        "hello world test",
 			shingleSize: 3,
-			wantCount:  1, // "hello world test" is 1 shingle
+			wantCount:   1, // "hello world test" is 1 shingle
 		},
 		{
-			name:       "longer text",
-			text:       "the quick brown fox jumps over",
+			name:        "longer text",
+			text:        "the quick brown fox jumps over",
 			shingleSize: 3,
-			wantCount:  4, // multiple 3-word combinations
+			wantCount:   4, // multiple 3-word combinations
 		},
 		{
-			name:       "short text",
-			text:       "hi",
+			name:        "short text",
+			text:        "hi",
 			shingleSize: 3,
-			wantCount:  0, // not enough words for 3-shingle
+			wantCount:   0, // not enough words for 3-shingle
 		},
 		{
-			name:       "empty text",
-			text:       "",
+			name:        "empty text",
+			text:        "",
 			shingleSize: 3,
-			wantCount:  0,
+			wantCount:   0,
 		},
 	}
 
@@ -68,44 +68,44 @@ func TestComputeShingles_Normalization(t *testing.T) {
 
 func TestJaccardSimilarity(t *testing.T) {
 	tests := []struct {
-		name      string
-		setA      map[string]struct{}
-		setB      map[string]struct{}
-		wantMin   float64
-		wantMax   float64
+		name    string
+		setA    map[string]struct{}
+		setB    map[string]struct{}
+		wantMin float64
+		wantMax float64
 	}{
 		{
-			name: "identical sets",
-			setA: map[string]struct{}{"a": {}, "b": {}, "c": {}},
-			setB: map[string]struct{}{"a": {}, "b": {}, "c": {}},
+			name:    "identical sets",
+			setA:    map[string]struct{}{"a": {}, "b": {}, "c": {}},
+			setB:    map[string]struct{}{"a": {}, "b": {}, "c": {}},
 			wantMin: 1.0,
 			wantMax: 1.0,
 		},
 		{
-			name: "no overlap",
-			setA: map[string]struct{}{"a": {}, "b": {}},
-			setB: map[string]struct{}{"c": {}, "d": {}},
+			name:    "no overlap",
+			setA:    map[string]struct{}{"a": {}, "b": {}},
+			setB:    map[string]struct{}{"c": {}, "d": {}},
 			wantMin: 0.0,
 			wantMax: 0.0,
 		},
 		{
-			name: "partial overlap",
-			setA: map[string]struct{}{"a": {}, "b": {}, "c": {}},
-			setB: map[string]struct{}{"b": {}, "c": {}, "d": {}},
+			name:    "partial overlap",
+			setA:    map[string]struct{}{"a": {}, "b": {}, "c": {}},
+			setB:    map[string]struct{}{"b": {}, "c": {}, "d": {}},
 			wantMin: 0.3,
 			wantMax: 0.7,
 		},
 		{
-			name: "one empty set",
-			setA: map[string]struct{}{},
-			setB: map[string]struct{}{"a": {}, "b": {}},
+			name:    "one empty set",
+			setA:    map[string]struct{}{},
+			setB:    map[string]struct{}{"a": {}, "b": {}},
 			wantMin: 0.0,
 			wantMax: 0.0,
 		},
 		{
-			name: "both empty",
-			setA: map[string]struct{}{},
-			setB: map[string]struct{}{},
+			name:    "both empty",
+			setA:    map[string]struct{}{},
+			setB:    map[string]struct{}{},
 			wantMin: 0.0,
 			wantMax: 0.0,
 		},

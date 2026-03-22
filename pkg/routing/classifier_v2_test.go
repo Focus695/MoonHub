@@ -124,10 +124,10 @@ func TestRuleClassifierV2_ToolCalls(t *testing.T) {
 	classifier := NewRuleClassifierV2(nil)
 
 	tests := []struct {
-		name          string
-		toolCalls     int
-		expectedTier  QueryTier
-		minScore      float64
+		name         string
+		toolCalls    int
+		expectedTier QueryTier
+		minScore     float64
 	}{
 		{
 			name:         "no_tool_calls",
@@ -136,16 +136,16 @@ func TestRuleClassifierV2_ToolCalls(t *testing.T) {
 			minScore:     -0.15,
 		},
 		{
-			name:          "few_tool_calls",
-			toolCalls:     2,
-			expectedTier:  TierModerate, // 0.10 from tool calls
-			minScore:      0.0,
+			name:         "few_tool_calls",
+			toolCalls:    2,
+			expectedTier: TierModerate, // 0.10 from tool calls
+			minScore:     0.0,
 		},
 		{
-			name:          "many_tool_calls",
-			toolCalls:     5,
-			expectedTier:  TierComplex, // 0.25 from tool calls
-			minScore:      0.15,
+			name:         "many_tool_calls",
+			toolCalls:    5,
+			expectedTier: TierComplex, // 0.25 from tool calls
+			minScore:     0.15,
 		},
 	}
 

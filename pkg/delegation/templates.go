@@ -10,8 +10,8 @@ import (
 
 // TemplateManager manages role templates for sub-agents
 type TemplateManager struct {
-	store          DelegationStore
-	defaultTools   []string
+	store        DelegationStore
+	defaultTools []string
 }
 
 // NewTemplateManager creates a new template manager
@@ -279,11 +279,11 @@ func (m *TemplateManager) GetTemplateStats(ctx context.Context, userID string) (
 	for i := 0; i < limit; i++ {
 		t := templates[i]
 		stats["top_templates"] = append(stats["top_templates"].([]map[string]any), map[string]any{
-			"id":           t.ID,
-			"name":         t.Name,
-			"category":     t.Category,
+			"id":            t.ID,
+			"name":          t.Name,
+			"category":      t.Category,
 			"success_count": t.SuccessCount,
-			"success_rate": float64(t.SuccessCount) / float64(t.SuccessCount+t.FailureCount+1),
+			"success_rate":  float64(t.SuccessCount) / float64(t.SuccessCount+t.FailureCount+1),
 		})
 	}
 

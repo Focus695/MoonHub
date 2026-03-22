@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-    plugin.RegisterPlugin(&PicoPlugin{})
+	plugin.RegisterPlugin(&PicoPlugin{})
 }
 
 // PicoPlugin implements ChannelPlugin interface for Pico
@@ -24,37 +24,37 @@ type PicoPlugin struct{}
 
 // Metadata returns plugin metadata
 func (p *PicoPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-pico",
-        Name:        "Pico",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "Pico VR device channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-pico",
+		Name:        "Pico",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "Pico VR device channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *PicoPlugin) Init(ctx *plugin.RuntimeContext) error {
-    return nil
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *PicoPlugin) Validate(cfg *config.Config) error {
-    if cfg.Channels.Pico.Enabled && cfg.Channels.Pico.Token == "" {
-        return fmt.Errorf("pico token required when enabled")
-    }
-    return nil
+	if cfg.Channels.Pico.Enabled && cfg.Channels.Pico.Token == "" {
+		return fmt.Errorf("pico token required when enabled")
+	}
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *PicoPlugin) ChannelPrefix() string {
-    return "pico"
+	return "pico"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *PicoPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.Pico.Enabled && cfg.Channels.Pico.Token != ""
+	return cfg.Channels.Pico.Enabled && cfg.Channels.Pico.Token != ""
 }
 
 // CreateChannel instantiates the channel implementation

@@ -17,11 +17,11 @@ type SubAgentExecutor interface {
 
 // BackgroundRunner manages background task execution
 type BackgroundRunner struct {
-	store           DelegationStore
-	lifecycle       *LifecycleManager
+	store            DelegationStore
+	lifecycle        *LifecycleManager
 	timeoutEstimator *TimeoutEstimator
-	intercom        *Intercom
-	config          DelegationConfig
+	intercom         *Intercom
+	config           DelegationConfig
 
 	// Execution tracking
 	running   atomic.Int64
@@ -32,10 +32,10 @@ type BackgroundRunner struct {
 }
 
 type backgroundTask struct {
-	record   *BackgroundTaskRecord
-	agent    *SubAgentRecord
+	record     *BackgroundTaskRecord
+	agent      *SubAgentRecord
 	rolePrompt string
-	tools    []string
+	tools      []string
 }
 
 // NewBackgroundRunner creates a new background runner
@@ -194,10 +194,10 @@ func (r *BackgroundRunner) executeTask(task *backgroundTask) {
 
 		// Emit event
 		r.intercom.Emit(ctx, TopicTaskFailed, task.record.UserID, map[string]any{
-			"task_id":     task.record.ID,
+			"task_id":      task.record.ID,
 			"sub_agent_id": task.agent.ID,
-			"error":       errMsg,
-			"duration_ms": duration.Milliseconds(),
+			"error":        errMsg,
+			"duration_ms":  duration.Milliseconds(),
 		})
 
 		logger.ErrorCF("delegation", "Background task failed", map[string]any{
@@ -250,9 +250,9 @@ func (r *BackgroundRunner) GetRunningCount() int {
 // Stats returns statistics about the background runner
 func (r *BackgroundRunner) Stats() map[string]any {
 	return map[string]any{
-		"running_tasks":   r.running.Load(),
-		"queue_size":      len(r.taskQueue),
-		"max_concurrent":  r.config.MaxConcurrentTasks,
+		"running_tasks":  r.running.Load(),
+		"queue_size":     len(r.taskQueue),
+		"max_concurrent": r.config.MaxConcurrentTasks,
 	}
 }
 

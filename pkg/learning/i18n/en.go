@@ -42,13 +42,13 @@ func initEnglish() TextResources {
 			},
 		},
 		Context: ContextText{
-			Preferences:    "## Learned Preferences",
-			ToolPrefs:      "## Tool Preferences",
-			Workflow:       "## Workflow Patterns",
-			WhatWorks:      "## What Works",
-			Corrections:    "## Recent Corrections",
-			Insights:       "## Behavioral Insights",
-			Notes:          "## Notes",
+			Preferences: "## Learned Preferences",
+			ToolPrefs:   "## Tool Preferences",
+			Workflow:    "## Workflow Patterns",
+			WhatWorks:   "## What Works",
+			Corrections: "## Recent Corrections",
+			Insights:    "## Behavioral Insights",
+			Notes:       "## Notes",
 		},
 	}
 }

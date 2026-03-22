@@ -183,8 +183,8 @@ func ValidSeverities() map[ThreatSeverity]bool {
 // ValidActions returns all valid enforcement actions.
 func ValidActions() map[ShieldAction]bool {
 	return map[ShieldAction]bool{
-		ActionBlock:          true,
+		ActionBlock:           true,
 		ActionRequireApproval: true,
-		ActionLog:            true,
+		ActionLog:             true,
 	}
 }

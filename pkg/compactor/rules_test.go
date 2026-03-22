@@ -366,9 +366,9 @@ Duplicate line.
 
 func TestSimilarityRatio(t *testing.T) {
 	tests := []struct {
-		a, b   string
-		min    float64
-		max    float64
+		a, b string
+		min  float64
+		max  float64
 	}{
 		{"identical", "identical", 1.0, 1.0},
 		{"short", "", 0.0, 0.0},

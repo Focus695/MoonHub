@@ -8,33 +8,33 @@ func TestMatchToolCall(t *testing.T) {
 	matcher := NewMatcher()
 
 	tests := []struct {
-		name      string
-		condition string
-		event     ShieldEvent
+		name        string
+		condition   string
+		event       ShieldEvent
 		shouldMatch bool
 	}{
 		{
-			name:      "exact tool name match",
-			condition: "exec",
-			event:     ShieldEvent{Scope: ScopeToolCall, ToolName: "exec"},
+			name:        "exact tool name match",
+			condition:   "exec",
+			event:       ShieldEvent{Scope: ScopeToolCall, ToolName: "exec"},
 			shouldMatch: true,
 		},
 		{
-			name:      "partial tool name match",
-			condition: "exec",
-			event:     ShieldEvent{Scope: ScopeToolCall, ToolName: "execute_code"},
+			name:        "partial tool name match",
+			condition:   "exec",
+			event:       ShieldEvent{Scope: ScopeToolCall, ToolName: "execute_code"},
 			shouldMatch: true,
 		},
 		{
-			name:      "no tool name match",
-			condition: "exec",
-			event:     ShieldEvent{Scope: ScopeToolCall, ToolName: "read_file"},
+			name:        "no tool name match",
+			condition:   "exec",
+			event:       ShieldEvent{Scope: ScopeToolCall, ToolName: "read_file"},
 			shouldMatch: false,
 		},
 		{
-			name:      "case insensitive match",
-			condition: "EXEC",
-			event:     ShieldEvent{Scope: ScopeToolCall, ToolName: "exec"},
+			name:        "case insensitive match",
+			condition:   "EXEC",
+			event:       ShieldEvent{Scope: ScopeToolCall, ToolName: "exec"},
 			shouldMatch: true,
 		},
 	}
@@ -165,9 +165,9 @@ func TestMatchEvent(t *testing.T) {
 	}
 
 	tests := []struct {
-		name        string
-		event       ShieldEvent
-		matchCount  int
+		name       string
+		event      ShieldEvent
+		matchCount int
 	}{
 		{
 			name:       "match tool name",

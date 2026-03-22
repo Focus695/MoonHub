@@ -29,8 +29,8 @@ import (
 	_ "github.com/sipeed/moonhub/pkg/plugins/channels/slack"
 	_ "github.com/sipeed/moonhub/pkg/plugins/channels/telegram"
 	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom"
-	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom_app"
 	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom_aibot"
+	_ "github.com/sipeed/moonhub/pkg/plugins/channels/wecom_app"
 	_ "github.com/sipeed/moonhub/pkg/plugins/channels/whatsapp"
 	_ "github.com/sipeed/moonhub/pkg/plugins/channels/whatsapp_native"
 	// Provider plugin imports - trigger init() registration
@@ -43,8 +43,6 @@ import (
 	_ "github.com/sipeed/moonhub/pkg/plugins/providers/openai_compat"
 	_ "github.com/sipeed/moonhub/pkg/plugins/providers/openai_oauth"
 	// Tool plugin imports - trigger init() registration
-	_ "github.com/sipeed/moonhub/pkg/plugins/tools/message"
-	_ "github.com/sipeed/moonhub/pkg/plugins/tools/web"
 	"github.com/sipeed/moonhub/pkg/config"
 	"github.com/sipeed/moonhub/pkg/cron"
 	"github.com/sipeed/moonhub/pkg/devices"
@@ -52,6 +50,8 @@ import (
 	"github.com/sipeed/moonhub/pkg/heartbeat"
 	"github.com/sipeed/moonhub/pkg/logger"
 	"github.com/sipeed/moonhub/pkg/media"
+	_ "github.com/sipeed/moonhub/pkg/plugins/tools/message"
+	_ "github.com/sipeed/moonhub/pkg/plugins/tools/web"
 	"github.com/sipeed/moonhub/pkg/providers"
 	"github.com/sipeed/moonhub/pkg/state"
 	"github.com/sipeed/moonhub/pkg/tools"

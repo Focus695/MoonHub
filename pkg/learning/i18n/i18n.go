@@ -50,7 +50,7 @@ type ContextText struct {
 // TextResources contains all localized text resources
 type TextResources struct {
 	Suggestions SuggestionsText
-	Context    ContextText
+	Context     ContextText
 }
 
 // I18n manages internationalization

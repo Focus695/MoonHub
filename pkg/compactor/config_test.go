@@ -27,9 +27,9 @@ func TestDefaultConfig(t *testing.T) {
 
 func TestConfig_Validate(t *testing.T) {
 	tests := []struct {
-		name     string
-		config   Config
-		check    func(Config) bool
+		name   string
+		config Config
+		check  func(Config) bool
 	}{
 		{
 			name:   "default config is valid",
@@ -39,49 +39,49 @@ func TestConfig_Validate(t *testing.T) {
 			},
 		},
 		{
-			name: "zero TriggerTokenPercent gets default",
+			name:   "zero TriggerTokenPercent gets default",
 			config: Config{TriggerTokenPercent: 0},
 			check: func(c Config) bool {
 				return c.TriggerTokenPercent == 70
 			},
 		},
 		{
-			name: "TriggerTokenPercent > 95 is capped",
+			name:   "TriggerTokenPercent > 95 is capped",
 			config: Config{TriggerTokenPercent: 100},
 			check: func(c Config) bool {
 				return c.TriggerTokenPercent == 95
 			},
 		},
 		{
-			name: "negative TriggerTokenPercent gets default",
+			name:   "negative TriggerTokenPercent gets default",
 			config: Config{TriggerTokenPercent: -1},
 			check: func(c Config) bool {
 				return c.TriggerTokenPercent == 70
 			},
 		},
 		{
-			name: "zero KeepRecent gets default",
+			name:   "zero KeepRecent gets default",
 			config: Config{KeepRecent: 0},
 			check: func(c Config) bool {
 				return c.KeepRecent == 10
 			},
 		},
 		{
-			name: "zero tier budgets get defaults",
+			name:   "zero tier budgets get defaults",
 			config: Config{TierBudgets: TierBudgets{}},
 			check: func(c Config) bool {
 				return c.TierBudgets.L0 == 200 && c.TierBudgets.L1 == 1000 && c.TierBudgets.L2 == 3000
 			},
 		},
 		{
-			name: "zero DedupSimilarityThreshold gets default",
+			name:   "zero DedupSimilarityThreshold gets default",
 			config: Config{DedupSimilarityThreshold: 0},
 			check: func(c Config) bool {
 				return c.DedupSimilarityThreshold == 0.6
 			},
 		},
 		{
-			name: "DedupSimilarityThreshold > 1 is capped",
+			name:   "DedupSimilarityThreshold > 1 is capped",
 			config: Config{DedupSimilarityThreshold: 1.5},
 			check: func(c Config) bool {
 				return c.DedupSimilarityThreshold == 1.0
@@ -107,9 +107,9 @@ func TestConfig_ShouldTrigger(t *testing.T) {
 	}
 
 	tests := []struct {
-		currentTokens  int
-		contextWindow  int
-		want           bool
+		currentTokens int
+		contextWindow int
+		want          bool
 	}{
 		{currentTokens: 50, contextWindow: 100, want: false}, // 50% < 70%
 		{currentTokens: 70, contextWindow: 100, want: true},  // 70% >= 70%
@@ -145,7 +145,7 @@ func TestConfig_GetKeepRecentCount(t *testing.T) {
 	}{
 		{keepRecent: 5, want: 5},
 		{keepRecent: 20, want: 20},
-		{keepRecent: 0, want: 10}, // default
+		{keepRecent: 0, want: 10},  // default
 		{keepRecent: -1, want: 10}, // default
 	}
 
@@ -161,11 +161,11 @@ func TestConfig_GetKeepRecentCount(t *testing.T) {
 
 func TestConfig_GetTierBudgets(t *testing.T) {
 	tests := []struct {
-		name     string
-		budgets  TierBudgets
-		wantL0   int
-		wantL1   int
-		wantL2   int
+		name    string
+		budgets TierBudgets
+		wantL0  int
+		wantL1  int
+		wantL2  int
 	}{
 		{
 			name:    "custom budgets",

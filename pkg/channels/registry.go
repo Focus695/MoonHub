@@ -22,4 +22,3 @@ func RegisterFactory(name string, f ChannelFactory) {
 	defer factoriesMu.Unlock()
 	factories[name] = f
 }
-

@@ -16,7 +16,7 @@ import (
 )
 
 func init() {
-    plugin.RegisterPlugin(&WeComPlugin{})
+	plugin.RegisterPlugin(&WeComPlugin{})
 }
 
 // WeComPlugin implements ChannelPlugin interface for WeCom
@@ -24,37 +24,37 @@ type WeComPlugin struct{}
 
 // Metadata returns plugin metadata
 func (p *WeComPlugin) Metadata() plugin.Metadata {
-    return plugin.Metadata{
-        ID:          "moonhub-channel-wecom",
-        Name:        "WeCom",
-        Type:        plugin.TypeChannel,
-        Version:     "2.0.0",
-        Description: "WeCom bot channel integration",
-        Priority:    100,
-    }
+	return plugin.Metadata{
+		ID:          "moonhub-channel-wecom",
+		Name:        "WeCom",
+		Type:        plugin.TypeChannel,
+		Version:     "2.0.0",
+		Description: "WeCom bot channel integration",
+		Priority:    100,
+	}
 }
 
 // Init initializes the plugin with runtime context
 func (p *WeComPlugin) Init(ctx *plugin.RuntimeContext) error {
-    return nil
+	return nil
 }
 
 // Validate checks if the plugin can run with current config
 func (p *WeComPlugin) Validate(cfg *config.Config) error {
-    if cfg.Channels.WeCom.Enabled && cfg.Channels.WeCom.Token == "" {
-        return fmt.Errorf("wecom token required when enabled")
-    }
-    return nil
+	if cfg.Channels.WeCom.Enabled && cfg.Channels.WeCom.Token == "" {
+		return fmt.Errorf("wecom token required when enabled")
+	}
+	return nil
 }
 
 // ChannelPrefix returns the userId prefix this channel owns
 func (p *WeComPlugin) ChannelPrefix() string {
-    return "wecom"
+	return "wecom"
 }
 
 // IsEnabled checks if the channel is enabled in config
 func (p *WeComPlugin) IsEnabled(cfg *config.Config) bool {
-    return cfg.Channels.WeCom.Enabled && cfg.Channels.WeCom.Token != ""
+	return cfg.Channels.WeCom.Enabled && cfg.Channels.WeCom.Token != ""
 }
 
 // CreateChannel instantiates the channel implementation

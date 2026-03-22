@@ -242,11 +242,11 @@ func (r *DecisionRecorder) GetStats() DecisionStats {
 
 // DecisionStats contains aggregated statistics about routing decisions.
 type DecisionStats struct {
-	TotalDecisions int                  `json:"total_decisions"`
-	TierCounts     map[QueryTier]int    `json:"tier_counts"`
-	AvgScore       float64              `json:"avg_score"`
-	AvgConfidence  float64              `json:"avg_confidence"`
-	SignalFrequency map[string]int      `json:"signal_frequency"`
+	TotalDecisions  int               `json:"total_decisions"`
+	TierCounts      map[QueryTier]int `json:"tier_counts"`
+	AvgScore        float64           `json:"avg_score"`
+	AvgConfidence   float64           `json:"avg_confidence"`
+	SignalFrequency map[string]int    `json:"signal_frequency"`
 }
 
 // Clear removes all recorded decisions.

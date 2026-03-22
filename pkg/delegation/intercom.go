@@ -12,9 +12,9 @@ import (
 // Topic constants for intercom events
 const (
 	// Task lifecycle
-	TopicTaskQueued     = "task:queued"
-	TopicTaskCompleted  = "task:completed"
-	TopicTaskFailed     = "task:failed"
+	TopicTaskQueued    = "task:queued"
+	TopicTaskCompleted = "task:completed"
+	TopicTaskFailed    = "task:failed"
 
 	// Agent lifecycle
 	TopicAgentCreated   = "agent:created"
@@ -31,9 +31,9 @@ const (
 	TopicBlackboardResolved = "blackboard:resolved"
 
 	// Nudge/reminder events
-	TopicNudgeScheduled   = "nudge:scheduled"
-	TopicNudgeDelivered   = "nudge:delivered"
-	TopicNudgeSuppressed  = "nudge:suppressed"
+	TopicNudgeScheduled  = "nudge:scheduled"
+	TopicNudgeDelivered  = "nudge:delivered"
+	TopicNudgeSuppressed = "nudge:suppressed"
 )
 
 // EventHandler is a function that handles an intercom event
@@ -49,12 +49,12 @@ type intercomSub struct {
 
 // Intercom is a pub/sub event system for delegation communication
 type Intercom struct {
-	mu          sync.RWMutex
-	handlers    map[string][]intercomSub
-	wildcards   []intercomSub
-	recent      map[string][]IntercomEvent
-	maxRecent   int
-	nextID      atomic.Uint64
+	mu        sync.RWMutex
+	handlers  map[string][]intercomSub
+	wildcards []intercomSub
+	recent    map[string][]IntercomEvent
+	maxRecent int
+	nextID    atomic.Uint64
 }
 
 // NewIntercom creates a new intercom event system
@@ -152,9 +152,9 @@ func (i *Intercom) Emit(ctx context.Context, topic, userID string, data map[stri
 	}
 
 	logger.DebugCF("delegation", "Emitted event", map[string]any{
-		"topic":      topic,
-		"user_id":    userID,
-		"handlers":   len(handlers) + len(wildcards),
+		"topic":    topic,
+		"user_id":  userID,
+		"handlers": len(handlers) + len(wildcards),
 	})
 }
 
