@@ -1,0 +1,28 @@
+[Unit]
+Description=MoonHub AI Assistant
+Documentation=https://github.com/sipeed/moonhub
+After=network-online.target NetworkManager.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/usr/local/share/moonhub
+Environment=MOONHUB_PROVISIONING_ENABLED=1
+Environment=MOONHUB_ALLOW_SYSTEM_CONTROL=1
+ExecStart=/usr/local/bin/moonhub-web -public /etc/moonhub/config.json
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Security hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/etc/moonhub /var/lib/moonhub
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -56,3 +56,6 @@ dist/
 !web/backend/dist/
 web/backend/dist/*
 !web/backend/dist/.gitkeep
+
+# MCP local config (may contain API keys)
+.mcp.json
